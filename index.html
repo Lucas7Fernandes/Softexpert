@@ -136,7 +136,7 @@ function toast(msg,ok){const t=document.createElement('div');t.className='toast'
 
 // === ENDEREÇO PLANILHA ===
 // Altere o caminho abaixo para o local da sua planilha relativa ao HTML
-const PLANILHA_PATH = 'C:\Users\lucas.fernandes\OneDrive - Plano e Plano Desenvolvimento Imobiliário\Área de Trabalho\Softexpert\Teste/template-softexpert.xlsx'; // ENDEREÇO PLANILHA
+const PLANILHA_PATH = 'https://lucas7fernandes.github.io/Softexpert/template-softexpert.xlsx'; // ENDEREÇO PLANILHA
 
 function carregarPlanilha(){
   fetch(PLANILHA_PATH).then(r=>{if(!r.ok)throw new Error('Arquivo não encontrado: '+PLANILHA_PATH);return r.arrayBuffer()}).then(buf=>{
