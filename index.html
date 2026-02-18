@@ -71,7 +71,7 @@
 
   <!-- TAB: VISÃO GERAL -->
   <div class="tab-content active" id="tab-overview">
-    <div class="filter-bar"><label>Filtrar Projeto:</label><select id="projFilter" onchange="applyFilter()"><option value="">Todos os Projetos</option></select></div>
+    <div class="filter-bar" id="filterBar" style="display:none"><label>Filtrar Projeto:</label><select id="projFilter" onchange="applyFilter()"><option value="">Todos os Projetos</option></select></div>
     <div class="kpi-grid" id="kpiGrid"></div>
     <div class="section-header"><h2>Cronograma dos Projetos</h2><div class="line"></div></div>
     <div class="card" style="margin-bottom:20px"><div class="card-body" style="padding:12px 20px"><div class="gantt-wrapper"><div class="gantt-container" id="ganttChart"></div></div></div></div>
@@ -243,8 +243,8 @@ function renderBoard(){
   const hrisk=ri.filter(r=>svC(V(r['Severidade']))=='high');
   let h=`<div class="story-card highlight"><h3>📊 Status do Programa</h3><p>${tp} projetos em andamento, ${cp} concluído(s). Avanço geral: <strong>${avg}%</strong>. Orçamento utilizado: <strong>${tot>0?Math.round(rea/tot*100):0}%</strong> (${fK(rea)} de ${fK(tot)}).</p></div>`;
   if(wn.length)h+=`<div class="story-card success"><h3>🏆 Principais Conquistas</h3><ul>${wn.map(w=>`<li>${V(w['Descrição']||w['Descricao']||'')}</li>`).join('')}</ul></div>`;
-  // Próximos marcos
-  const upcoming=D.etapas.filter(e=>sC(V(e['Status']))!='completed').slice(0,5);
+  // Próximos marcos - ordenados por Fim Planejado
+  const upcoming=D.etapas.filter(e=>sC(V(e['Status']))!='completed').sort(function(a,b){var da=pM(V(a['Fim Planejado']||a['Fim']||'')),db=pM(V(b['Fim Planejado']||b['Fim']||''));if(!da)return 1;if(!db)return-1;return da.localeCompare(db)}).slice(0,5);
   if(upcoming.length)h+=`<div class="story-card"><h3>🎯 Próximos Marcos</h3><ul>${upcoming.map(e=>`<li><strong>${V(e['Projeto'])}</strong> — ${V(e['Etapa'])} (${V(e['Fim Planejado']||e['Fim']||'')})</li>`).join('')}</ul></div>`;
   if(ri.length)h+=`<div class="story-card warning"><h3>⚠️ Riscos (${ri.length})</h3><ul>${ri.map(r=>`<li><span style="color:${svC(V(r['Severidade']))=='high'?'var(--red)':'var(--yellow)'}">●</span> ${V(r['Descrição']||r['Descricao']||'')} — <em>${V(r['Status']||'')}</em></li>`).join('')}</ul></div>`;
   if(dc.length)h+=`<div class="story-card highlight"><h3>🔔 Decisões Necessárias (${dc.length})</h3><ul>${dc.map(d=>`<li>${V(d['Descrição']||d['Descricao']||'')} — Prazo: <strong>${V(d['Data Abertura']||d['Prazo / Data']||'')}</strong></li>`).join('')}</ul></div>`;
