@@ -165,13 +165,22 @@ function loadData(S){
   D.raci=(S['RACI']||[]).filter(r=>V(r['Atividade']||'').length>3&&!V(r['Atividade']||'').toLowerCase().includes('nome da'));
   D.capacitacao=(S['Capacitação']||S['Capacitacao']||[]).filter(r=>V(r['Indicador']||'').length>3);
   const bR=S['Budget']||[];
-  const bSec=r=>{const keys=Object.keys(r);const secKey=keys.find(k=>k.includes('Se')&&(k.includes('ção')||k.includes('cao')||k.includes('ç')))||keys.find(k=>k.toLowerCase().startsWith('se'))||keys[0]||'';return V(r[secKey]||'')};
-  const bItem=r=>{return V(r['Item']||r[Object.keys(r)[1]]||'')};
-  const bOrc=r=>{const keys=Object.keys(r);const k=keys.find(k=>k.includes('Orç')||k.includes('Orc'))||keys[2]||'';return N(r[k]||0)};
-  const bReal=r=>{const keys=Object.keys(r);const k=keys.find(k=>k.includes('Realizado'))||keys[3]||'';return N(r[k]||0)};
-  D.budgetSummary={};bR.filter(r=>bSec(r)==='Resumo').forEach(r=>{const it=bItem(r);const orc=bOrc(r);const real=bReal(r);if(it.includes('Orçamento')||it.includes('Orcamento'))D.budgetSummary['Orçamento Total (R$)']=orc||real;if(it.includes('Realizado'))D.budgetSummary['Realizado (R$)']=real||orc;if(it.includes('Comprometido'))D.budgetSummary['Comprometido (R$)']=orc||real;if(it.includes('Saldo'))D.budgetSummary['Saldo Disponível (R$)']=orc||real});
-  D.budgetCat=bR.filter(r=>bSec(r)==='Categoria').map(r=>({Categoria:bItem(r),'Orçado (R$)':bOrc(r),'Realizado (R$)':bReal(r)}));
-  D.budgetMonthly=bR.filter(r=>bSec(r)==='Mensal').map(r=>({'Mês':bItem(r),'Planejado (R$)':bOrc(r),'Realizado (R$)':bReal(r)}));
+  console.log('[DEBUG] Budget rows:',bR.length);if(bR.length>0)console.log('[DEBUG] Budget row 0 keys:',Object.keys(bR[0]),'values:',Object.values(bR[0]));
+  // Generic column accessors - find keys by position since names may have encoding issues
+  function bCol(row,n){const keys=Object.keys(row);return keys.length>n?row[keys[n]]:''}
+  D.budgetSummary={};bR.forEach(function(row){
+    var sec=V(bCol(row,0)),item=V(bCol(row,1)),col3=bCol(row,2),col4=bCol(row,3);
+    if(sec==='Resumo'){
+      if(item.indexOf('Total')>=0)D.budgetSummary['tot']=N(col3)||N(col4);
+      if(item.indexOf('Realizado')>=0)D.budgetSummary['rea']=N(col4)||N(col3);
+      if(item.indexOf('Comprometido')>=0)D.budgetSummary['com']=N(col3)||N(col4);
+      if(item.indexOf('Saldo')>=0)D.budgetSummary['sal']=N(col3)||N(col4);
+    }
+  });
+  console.log('[DEBUG] budgetSummary:',JSON.stringify(D.budgetSummary));
+  D.budgetCat=bR.filter(function(row){return V(bCol(row,0))==='Categoria'}).map(function(row){return{Categoria:V(bCol(row,1)),orc:N(bCol(row,2)),rea:N(bCol(row,3))}});
+  D.budgetMonthly=bR.filter(function(row){return V(bCol(row,0))==='Mensal'}).map(function(row){return{mes:V(bCol(row,1)),plan:N(bCol(row,2)),rea:N(bCol(row,3))}});
+  console.log('[DEBUG] budgetCat:',D.budgetCat.length,'budgetMonthly:',D.budgetMonthly.length);
   D.historico=(S['Histórico']||S['Historico']||[]).filter(r=>V(r['Data']||'').length>3&&!V(r['Data']||'').toLowerCase().includes('dd/mm'));
   buildFilter();renderAll()}
 
@@ -188,7 +197,7 @@ function renderKPIs(){
   const tp=pr.length,cp=pr.filter(r=>sC(V(r['Status']))=='completed').length,ns=pr.filter(r=>sC(V(r['Status']))=='not-started').length;
   let avg=tp?pr.reduce((s,r)=>{let v=P(r['% Avanço']||r['% Avanco']||'0');if(v>0&&v<=1)v=v*100;return s+v},0)/tp:0;avg=Math.round(avg);
   // Budget variance
-  const bs=D.budgetSummary,tot=N(bs['Orçamento Total (R$)']||bs['Orcamento Total (R$)']||0),rea=N(bs['Realizado (R$)']||0);
+  const bs=D.budgetSummary,tot=N(bs.tot||0),rea=N(bs.rea||0);
   const bPct=tot>0?Math.round(rea/tot*100):0;
   // Weekly variation from historico
   const hist=D.historico;let weekInd='<span class="kpi-indicator flat">sem histórico</span>';
@@ -219,18 +228,18 @@ function renderRaci(){const rows=D.raci;if(!rows.length)return;const cols=Object
 
 function renderTraining(){document.getElementById('trainingBox').innerHTML='<div class="budget-bars">'+D.capacitacao.map(r=>{const lb=V(r['Indicador']),rl=N(r['Realizado']),mt=N(r['Meta']),pc=mt>0?Math.round(rl/mt*100):0;return`<div class="budget-item"><label><span>${lb}</span><strong>${rl} de ${mt}</strong></label><div class="budget-track"><div class="budget-fill ok" style="width:${pc}%"></div></div></div>`}).join('')+'</div>'}
 
-function renderBudget(){const bs=D.budgetSummary||{},tot=N(bs['Orçamento Total (R$)']||0),rea=N(bs['Realizado (R$)']||0),com=N(bs['Comprometido (R$)']||0),sal=N(bs['Saldo Disponível (R$)']||0),pU=tot>0?Math.round(rea/tot*100):0,pS=tot>0?Math.round(sal/tot*100):0;
+function renderBudget(){const bs=D.budgetSummary||{},tot=N(bs.tot||0),rea=N(bs.rea||0),com=N(bs.com||0),sal=N(bs.sal||0),pU=tot>0?Math.round(rea/tot*100):0,pS=tot>0?Math.round(sal/tot*100):0;
 document.getElementById('budgetKpis').innerHTML=`<div class="kpi-card accent-navy"><div class="kpi-label">Orçamento Total</div><div class="kpi-value" style="font-size:24px">${fK(tot)}</div></div><div class="kpi-card accent-green"><div class="kpi-label">Realizado</div><div class="kpi-value" style="font-size:24px">${fK(rea)}</div><div class="kpi-sub">${pU}% do orçamento</div></div><div class="kpi-card accent-yellow"><div class="kpi-label">Comprometido</div><div class="kpi-value" style="font-size:24px">${fK(com)}</div></div><div class="kpi-card accent-coral"><div class="kpi-label">Saldo</div><div class="kpi-value" style="font-size:24px">${fK(sal)}</div><div class="kpi-sub">${pS}%${pS<20?' — <span class="down">Atenção</span>':''}</div></div>`;
-document.getElementById('budgetCatBox').innerHTML='<div class="budget-bars">'+D.budgetCat.map(r=>{const lb=V(r['Categoria']||r['Item']||''),or=N(r['Orçado (R$)']||r['Orcado (R$)']||0),re=N(r['Realizado (R$)']||0),pc=or>0?Math.round(re/or*100):0;return`<div class="budget-item"><label><span>${lb}</span><strong>${fK(re)} / ${fK(or)}</strong></label><div class="budget-track"><div class="budget-fill ${pc>85?'warn':'ok'}" style="width:${pc}%"></div></div></div>`}).join('')+'</div>';
-const mo=D.budgetMonthly;if(!mo.length){document.getElementById('budgetChart').innerHTML='';return}const mx=Math.max(...mo.map(m=>Math.max(N(m['Realizado (R$)']||0),N(m['Planejado (R$)']||0))),1);let mH='<div style="display:flex;flex-direction:column;gap:6px">';
-mo.forEach((m,i)=>{const mn=V(m['Mês']||m['Mes']||''),r=N(m['Realizado (R$)']||0),p=N(m['Planejado (R$)']||0);mH+=`<div style="display:grid;grid-template-columns:55px 1fr 55px;align-items:center;gap:6px;font-size:11px"><span style="color:var(--text-secondary)">${mn}</span><div style="display:flex;gap:2px"><div style="height:14px;background:var(--navy);border-radius:3px;width:${(r/mx*100).toFixed(0)}%"></div><div style="height:8px;background:rgba(27,42,74,.2);border-radius:3px;width:${(p/mx*100).toFixed(0)}%"></div></div><span style="font-weight:600;text-align:right;font-size:10px">${fK(r)}</span></div>`});
+document.getElementById('budgetCatBox').innerHTML='<div class="budget-bars">'+D.budgetCat.map(r=>{const lb=V(r.Categoria||''),or=N(r.orc||0),re=N(r.rea||0),pc=or>0?Math.round(re/or*100):0;return`<div class="budget-item"><label><span>${lb}</span><strong>${fK(re)} / ${fK(or)}</strong></label><div class="budget-track"><div class="budget-fill ${pc>85?'warn':'ok'}" style="width:${pc}%"></div></div></div>`}).join('')+'</div>';
+const mo=D.budgetMonthly;if(!mo.length){document.getElementById('budgetChart').innerHTML='';return}const mx=Math.max(...mo.map(m=>Math.max(N(m.rea||0),N(m.plan||0))),1);let mH='<div style="display:flex;flex-direction:column;gap:6px">';
+mo.forEach(function(m){const mn=V(m.mes||''),r=N(m.rea||0),p=N(m.plan||0);mH+=`<div style="display:grid;grid-template-columns:55px 1fr 55px;align-items:center;gap:6px;font-size:11px"><span style="color:var(--text-secondary)">${mn}</span><div style="display:flex;gap:2px"><div style="height:14px;background:var(--navy);border-radius:3px;width:${(r/mx*100).toFixed(0)}%"></div><div style="height:8px;background:rgba(27,42,74,.2);border-radius:3px;width:${(p/mx*100).toFixed(0)}%"></div></div><span style="font-weight:600;text-align:right;font-size:10px">${fK(r)}</span></div>`});
 mH+='</div><div style="display:flex;gap:12px;margin-top:12px;font-size:10px;color:var(--text-secondary)"><span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:var(--navy);border-radius:2px;display:inline-block"></span> Realizado</span><span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:rgba(27,42,74,.2);border-radius:2px;display:inline-block"></span> Planejado</span></div>';document.getElementById('budgetChart').innerHTML=mH}
 
 function renderBoard(){
   const pr=D.projetos,ri=D.riscos.filter(r=>V(r['Tipo']).toLowerCase().includes('risco')),im=D.riscos.filter(r=>V(r['Tipo']).toLowerCase().includes('imped')),dc=D.decisoes.filter(r=>V(r['Tipo']).toLowerCase().includes('decis')),wn=D.decisoes.filter(r=>V(r['ID']||'').match(/^C/i));
   const tp=pr.length,cp=pr.filter(r=>sC(V(r['Status']))=='completed').length;
   let avg=tp?pr.reduce((s,r)=>{let v=P(r['% Avanço']||r['% Avanco']||'0');if(v>0&&v<=1)v=v*100;return s+v},0)/tp:0;avg=Math.round(avg);
-  const bs=D.budgetSummary,tot=N(bs['Orçamento Total (R$)']||0),rea=N(bs['Realizado (R$)']||0);
+  const bs=D.budgetSummary,tot=N(bs.tot||0),rea=N(bs.rea||0);
   const hrisk=ri.filter(r=>svC(V(r['Severidade']))=='high');
   let h=`<div class="story-card highlight"><h3>📊 Status do Programa</h3><p>${tp} projetos em andamento, ${cp} concluído(s). Avanço geral: <strong>${avg}%</strong>. Orçamento utilizado: <strong>${tot>0?Math.round(rea/tot*100):0}%</strong> (${fK(rea)} de ${fK(tot)}).</p></div>`;
   if(wn.length)h+=`<div class="story-card success"><h3>🏆 Principais Conquistas</h3><ul>${wn.map(w=>`<li>${V(w['Descrição']||w['Descricao']||'')}</li>`).join('')}</ul></div>`;
