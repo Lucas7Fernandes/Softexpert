@@ -61,7 +61,6 @@
 </div>
 <div class="nav-tabs">
   <button class="nav-tab active" onclick="switchTab(this,'overview')">Visão Geral</button>
-  <button class="nav-tab" onclick="switchTab(this,'projects')">Projetos &amp; Módulos</button>
   <button class="nav-tab" onclick="switchTab(this,'risks')">Riscos &amp; Impedimentos</button>
   <button class="nav-tab" onclick="switchTab(this,'people')">Governança &amp; Pessoas</button>
   <button class="nav-tab" onclick="switchTab(this,'budget')">Financeiro</button>
@@ -76,12 +75,6 @@
     <div class="section-header"><h2>Cronograma dos Projetos</h2><div class="line"></div></div>
     <div class="card" style="margin-bottom:20px"><div class="card-body" style="padding:12px 20px"><div class="gantt-wrapper"><div class="gantt-container" id="ganttChart"></div></div></div></div>
     <div class="card" style="margin-bottom:20px"><div class="card-header"><h3>🏆 Conquistas &amp; Quick Wins</h3></div><div class="card-body" id="winsBox"></div></div>
-  </div>
-
-  <!-- TAB: PROJETOS & MÓDULOS -->
-  <div class="tab-content" id="tab-projects">
-    <div class="section-header"><h2>Mapa de Módulos por Projeto</h2><div class="line"></div><div class="count" id="modCount">0 módulos</div></div>
-    <div class="modules-grid" id="modulesGrid"></div>
   </div>
 
   <!-- TAB: RISCOS & IMPEDIMENTOS -->
@@ -249,7 +242,7 @@ function renderBudgetDetail(){
     var key=gKey==='cat'?r.cat:gKey==='proj'?(r.proj||'Sem projeto'):r.forn||'Sem fornecedor';
     if(!groups[key])groups[key]={orc:0,rea:0,items:[],projId:gKey==='proj'?r.proj:''};
     groups[key].orc+=r.orc;groups[key].rea+=r.rea;groups[key].items.push(r)});
-  var subLabel={cat:function(r){var parts=[];if(r.forn)parts.push(r.forn);if(r.proj)parts.push(r.proj+' — '+projName(r.proj));return parts.join(' · ')||'—'},proj:function(r){var parts=[];if(r.cat)parts.push(r.cat);if(r.forn)parts.push(r.forn);return parts.join(' · ')||'—'},forn:function(r){var parts=[];if(r.cat)parts.push(r.cat);if(r.proj)parts.push(r.proj+' — '+projName(r.proj));return parts.join(' · ')||'—'}}[gKey];
+  var subLabel={cat:function(r){var parts=[];if(r.proj)parts.push('Projeto: '+projName(r.proj));if(r.forn)parts.push('Fornecedor: '+r.forn);return parts.join(' — ')||'—'},proj:function(r){var parts=[];if(r.cat)parts.push(r.cat);if(r.forn)parts.push('Fornecedor: '+r.forn);return parts.join(' — ')||'—'},forn:function(r){var parts=[];if(r.cat)parts.push(r.cat);if(r.proj)parts.push('Projeto: '+projName(r.proj));return parts.join(' — ')||'—'}}[gKey];
   var h='';Object.keys(groups).sort().forEach(function(gk,gi){
     var g=groups[gk],pc=g.orc>0?Math.round(g.rea/g.orc*100):0;
     var label=gKey==='proj'?(gk!=='Sem projeto'?gk+' — '+projName(gk):gk):gk;
