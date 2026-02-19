@@ -112,6 +112,7 @@
       <div class="card"><div class="card-header"><h3>Distribuição por Categoria</h3></div><div class="card-body" id="budgetCatBox"></div></div>
       <div class="card"><div class="card-header"><h3>Evolução Mensal</h3></div><div class="card-body" id="budgetChart"></div></div>
     </div>
+    <div class="card" style="margin-top:16px"><div class="card-header" style="flex-wrap:wrap;gap:8px"><h3>Detalhamento</h3><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="budgetProjFilter" onchange="renderBudgetDetail()" style="padding:4px 10px;border:1px solid var(--bg-subtle);border-radius:6px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--navy);cursor:pointer"><option value="">Todos os Projetos</option></select><div style="display:flex;gap:4px" id="budgetToggle"></div></div></div><div class="card-body" id="budgetDetail"></div></div>
   </div>
 
   <!-- TAB: BOARD REVIEW -->
@@ -150,7 +151,7 @@ const PLANILHA_PATH='./template-softexpert.xlsx'; // ENDEREÇO PLANILHA
 function carregarPlanilha(){fetch(PLANILHA_PATH).then(r=>{if(!r.ok)throw new Error('N/A');return r.arrayBuffer()}).then(buf=>{const wb=XLSX.read(buf,{type:'array'});const S={};wb.SheetNames.forEach(n=>{S[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:''})});loadData(S);toast('✓ Planilha carregada',true)}).catch(()=>{loadDefaultData()})}
 
 // === DATA ===
-let D={programa:{},projetos:[],etapas:[],modulos:[],riscos:[],decisoes:[],organograma:[],raci:[],capacitacao:[],budgetSummary:{},budgetCat:[],budgetMonthly:[],historico:[]};
+let D={programa:{},projetos:[],etapas:[],modulos:[],riscos:[],decisoes:[],organograma:[],raci:[],capacitacao:[],budgetRows:[],historico:[]};
 let filterProj='';
 
 function loadData(S){
@@ -165,22 +166,10 @@ function loadData(S){
   D.raci=(S['RACI']||[]).filter(r=>V(r['Atividade']||'').length>3&&!V(r['Atividade']||'').toLowerCase().includes('nome da'));
   D.capacitacao=(S['Capacitação']||S['Capacitacao']||[]).filter(r=>V(r['Indicador']||'').length>3);
   const bR=S['Budget']||[];
-  console.log('[DEBUG] Budget rows:',bR.length);if(bR.length>0)console.log('[DEBUG] Budget row 0 keys:',Object.keys(bR[0]),'values:',Object.values(bR[0]));
-  // Generic column accessors - find keys by position since names may have encoding issues
-  function bCol(row,n){const keys=Object.keys(row);return keys.length>n?row[keys[n]]:''}
-  D.budgetSummary={};bR.forEach(function(row){
-    var sec=V(bCol(row,0)),item=V(bCol(row,1)),col3=bCol(row,2),col4=bCol(row,3);
-    if(sec==='Resumo'){
-      if(item.indexOf('Total')>=0)D.budgetSummary['tot']=N(col3)||N(col4);
-      if(item.indexOf('Realizado')>=0)D.budgetSummary['rea']=N(col4)||N(col3);
-      if(item.indexOf('Comprometido')>=0)D.budgetSummary['com']=N(col3)||N(col4);
-      if(item.indexOf('Saldo')>=0)D.budgetSummary['sal']=N(col3)||N(col4);
-    }
-  });
-  console.log('[DEBUG] budgetSummary:',JSON.stringify(D.budgetSummary));
-  D.budgetCat=bR.filter(function(row){return V(bCol(row,0))==='Categoria'}).map(function(row){return{Categoria:V(bCol(row,1)),orc:N(bCol(row,2)),rea:N(bCol(row,3))}});
-  D.budgetMonthly=bR.filter(function(row){return V(bCol(row,0))==='Mensal'}).map(function(row){return{mes:V(bCol(row,1)),plan:N(bCol(row,2)),rea:N(bCol(row,3))}});
-  console.log('[DEBUG] budgetCat:',D.budgetCat.length,'budgetMonthly:',D.budgetMonthly.length);
+  // New structure: Categoria, Fornecedor, ID Projeto, Orçado (R$), Jul/2025, Ago/2025, ...
+  // Parse by column position for encoding safety
+  D.budgetRows=bR.filter(function(row){var keys=Object.keys(row);var v0=V(row[keys[0]]||'');return v0.length>2&&v0!=='Ex: Consultoria'&&!v0.toLowerCase().includes('hint')}).map(function(row){var keys=Object.keys(row);var monthKeys=keys.slice(4);var monthVals={};var totalRea=0;monthKeys.forEach(function(mk){var v=N(row[mk]||0);if(v>0){monthVals[V(mk)]=v;totalRea+=v}});return{cat:V(row[keys[0]]||''),forn:V(row[keys[1]]||''),proj:V(row[keys[2]]||''),orc:N(row[keys[3]]||0),months:monthVals,rea:totalRea}});
+  console.log('[DEBUG] budgetRows:',D.budgetRows.length,D.budgetRows.slice(0,2));
   D.historico=(S['Histórico']||S['Historico']||[]).filter(r=>V(r['Data']||'').length>3&&!V(r['Data']||'').toLowerCase().includes('dd/mm'));
   buildFilter();renderAll()}
 
@@ -197,8 +186,8 @@ function renderKPIs(){
   const tp=pr.length,cp=pr.filter(r=>sC(V(r['Status']))=='completed').length,ns=pr.filter(r=>sC(V(r['Status']))=='not-started').length;
   let avg=tp?pr.reduce((s,r)=>{let v=P(r['% Avanço']||r['% Avanco']||'0');if(v>0&&v<=1)v=v*100;return s+v},0)/tp:0;avg=Math.round(avg);
   // Budget variance
-  const bs=D.budgetSummary,tot=N(bs.tot||0),rea=N(bs.rea||0);
-  const bPct=tot>0?Math.round(rea/tot*100):0;
+  var totOrc=0,totRea=0;D.budgetRows.forEach(function(r){totOrc+=r.orc;totRea+=r.rea});
+  const bPct=totOrc>0?Math.round(totRea/totOrc*100):0;
   // Weekly variation from historico
   const hist=D.historico;let weekInd='<span class="kpi-indicator flat">sem histórico</span>';
   if(hist.length>=2){const last=P(hist[hist.length-1]['% Avanço Geral']||hist[hist.length-1]['% Avanco Geral']||0);const prev7=hist.length>=8?P(hist[hist.length-8]['% Avanço Geral']||hist[hist.length-8]['% Avanco Geral']||0):P(hist[0]['% Avanço Geral']||hist[0]['% Avanco Geral']||0);const diff=Math.round((last-prev7)*10)/10;if(diff>0)weekInd=`<span class="kpi-indicator up">▲ +${diff}% vs 7d</span>`;else if(diff<0)weekInd=`<span class="kpi-indicator down">▼ ${diff}% vs 7d</span>`;else weekInd='<span class="kpi-indicator flat">= estável vs 7d</span>';}
@@ -206,7 +195,7 @@ function renderKPIs(){
     `<div class="kpi-card accent-navy" onclick="goTab('projects')"><div class="kpi-label">Projetos</div><div class="kpi-value">${tp}</div><div class="kpi-sub">${tp-cp-ns} andamento · ${cp} concluído</div></div>`+
     `<div class="kpi-card accent-green"><div class="kpi-label">Avanço Geral</div><div class="kpi-value">${avg}%</div><div class="kpi-sub">${weekInd}</div></div>`+
     `<div class="kpi-card accent-coral" onclick="goTab('risks')"><div class="kpi-label">Riscos / Imped. / Decisões</div><div class="kpi-value">${ri.length} / ${im.length} / ${dc.length}</div><div class="kpi-sub">${ri.filter(r=>svC(V(r['Severidade']))=='high').length} risco(s) alto · ${im.length} bloqueio(s)</div></div>`+
-    `<div class="kpi-card accent-blue" onclick="goTab('budget')"><div class="kpi-label">Orçamento</div><div class="kpi-value">${bPct}%</div><div class="kpi-sub">${fK(rea)} de ${fK(tot)} utilizado</div></div>`}
+    `<div class="kpi-card accent-blue" onclick="goTab('budget')"><div class="kpi-label">Orçamento</div><div class="kpi-value">${bPct}%</div><div class="kpi-sub">${fK(totRea)} de ${fK(totOrc)} utilizado</div></div>`}
 
 function renderGantt(){const pr=fp(D.projetos,'ID'),et=D.etapas,tI=todayMI(),tP=((tI+.5)/18*100).toFixed(2);let h='<div class="gantt-header"><div class="gantt-header-label">Projeto / Etapa</div><div class="gantt-months">';ML.forEach((m,i)=>h+=`<div class="gantt-month" style="${i===tI?'color:var(--coral);font-weight:700':''}">${m}</div>`);h+='</div></div><div style="position:relative"><div class="gantt-today-global" style="left:calc(280px + (100% - 280px) * '+tP+' / 100)"></div>';
 pr.forEach((p,pi)=>{const id=V(p['ID']||'p'+pi),nm=V(p['Projeto']),ar=V(p['Área']||p['Area']||''),st=sC(V(p['Status']));let pg=P(p['% Avanço']||p['% Avanco']||'0');if(pg>0&&pg<=1)pg=Math.round(pg*100);const sk=pM(V(p['Início Planejado']||p['Inicio Planejado']||'')),ek=pM(V(p['Fim Planejado']||''));const si=MK.indexOf(sk),ei=MK.indexOf(ek),bL=si>=0?(si/18*100).toFixed(2)+'%':'0%',bW=(si>=0&&ei>=0)?((ei-si+1)/18*100).toFixed(2)+'%':'0%';
@@ -228,20 +217,70 @@ function renderRaci(){const rows=D.raci;if(!rows.length)return;const cols=Object
 
 function renderTraining(){document.getElementById('trainingBox').innerHTML='<div class="budget-bars">'+D.capacitacao.map(r=>{const lb=V(r['Indicador']),rl=N(r['Realizado']),mt=N(r['Meta']),pc=mt>0?Math.round(rl/mt*100):0;return`<div class="budget-item"><label><span>${lb}</span><strong>${rl} de ${mt}</strong></label><div class="budget-track"><div class="budget-fill ok" style="width:${pc}%"></div></div></div>`}).join('')+'</div>'}
 
-function renderBudget(){const bs=D.budgetSummary||{},tot=N(bs.tot||0),rea=N(bs.rea||0),com=N(bs.com||0),sal=N(bs.sal||0),pU=tot>0?Math.round(rea/tot*100):0,pS=tot>0?Math.round(sal/tot*100):0;
-document.getElementById('budgetKpis').innerHTML=`<div class="kpi-card accent-navy"><div class="kpi-label">Orçamento Total</div><div class="kpi-value" style="font-size:24px">${fK(tot)}</div></div><div class="kpi-card accent-green"><div class="kpi-label">Realizado</div><div class="kpi-value" style="font-size:24px">${fK(rea)}</div><div class="kpi-sub">${pU}% do orçamento</div></div><div class="kpi-card accent-yellow"><div class="kpi-label">Comprometido</div><div class="kpi-value" style="font-size:24px">${fK(com)}</div></div><div class="kpi-card accent-coral"><div class="kpi-label">Saldo</div><div class="kpi-value" style="font-size:24px">${fK(sal)}</div><div class="kpi-sub">${pS}%${pS<20?' — <span class="down">Atenção</span>':''}</div></div>`;
-document.getElementById('budgetCatBox').innerHTML='<div class="budget-bars">'+D.budgetCat.map(r=>{const lb=V(r.Categoria||''),or=N(r.orc||0),re=N(r.rea||0),pc=or>0?Math.round(re/or*100):0;return`<div class="budget-item"><label><span>${lb}</span><strong>${fK(re)} / ${fK(or)}</strong></label><div class="budget-track"><div class="budget-fill ${pc>85?'warn':'ok'}" style="width:${pc}%"></div></div></div>`}).join('')+'</div>';
-const mo=D.budgetMonthly;if(!mo.length){document.getElementById('budgetChart').innerHTML='';return}const mx=Math.max(...mo.map(m=>Math.max(N(m.rea||0),N(m.plan||0))),1);let mH='<div style="display:flex;flex-direction:column;gap:6px">';
-mo.forEach(function(m){const mn=V(m.mes||''),r=N(m.rea||0),p=N(m.plan||0);mH+=`<div style="display:grid;grid-template-columns:55px 1fr 55px;align-items:center;gap:6px;font-size:11px"><span style="color:var(--text-secondary)">${mn}</span><div style="display:flex;gap:2px"><div style="height:14px;background:var(--navy);border-radius:3px;width:${(r/mx*100).toFixed(0)}%"></div><div style="height:8px;background:rgba(27,42,74,.2);border-radius:3px;width:${(p/mx*100).toFixed(0)}%"></div></div><span style="font-weight:600;text-align:right;font-size:10px">${fK(r)}</span></div>`});
-mH+='</div><div style="display:flex;gap:12px;margin-top:12px;font-size:10px;color:var(--text-secondary)"><span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:var(--navy);border-radius:2px;display:inline-block"></span> Realizado</span><span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:rgba(27,42,74,.2);border-radius:2px;display:inline-block"></span> Planejado</span></div>';document.getElementById('budgetChart').innerHTML=mH}
+var budgetGroupBy='cat';
+function renderBudget(){
+  var rows=D.budgetRows,totOrc=0,totRea=0;
+  rows.forEach(function(r){totOrc+=r.orc;totRea+=r.rea});
+  var pU=totOrc>0?Math.round(totRea/totOrc*100):0;
+  var sal=totOrc-totRea;var pS=totOrc>0?Math.round(sal/totOrc*100):0;
+  // KPIs
+  document.getElementById('budgetKpis').innerHTML='<div class="kpi-card accent-navy"><div class="kpi-label">Orçamento Total</div><div class="kpi-value" style="font-size:24px">'+fK(totOrc)+'</div></div><div class="kpi-card accent-green"><div class="kpi-label">Realizado</div><div class="kpi-value" style="font-size:24px">'+fK(totRea)+'</div><div class="kpi-sub">'+pU+'% do orçamento</div></div><div class="kpi-card accent-yellow"><div class="kpi-label">Comprometido</div><div class="kpi-value" style="font-size:24px">'+fK(totOrc-sal)+'</div></div><div class="kpi-card accent-coral"><div class="kpi-label">Saldo</div><div class="kpi-value" style="font-size:24px">'+fK(sal)+'</div><div class="kpi-sub">'+pS+'%'+(pS<20?' — <span class="down">Atenção</span>':'')+'</div></div>';
+  // Distribution by category
+  var cats={};rows.forEach(function(r){if(!cats[r.cat])cats[r.cat]={orc:0,rea:0};cats[r.cat].orc+=r.orc;cats[r.cat].rea+=r.rea});
+  var catH='<div class="budget-bars">';Object.keys(cats).forEach(function(c){var o=cats[c].orc,re=cats[c].rea,pc=o>0?Math.round(re/o*100):0;catH+='<div class="budget-item"><label><span>'+c+'</span><strong>'+fK(re)+' / '+fK(o)+'</strong></label><div class="budget-track"><div class="budget-fill '+(pc>85?'warn':'ok')+'" style="width:'+pc+'%"></div></div></div>'});catH+='</div>';
+  document.getElementById('budgetCatBox').innerHTML=catH;
+  // Monthly evolution
+  var allMonths={};rows.forEach(function(r){Object.keys(r.months).forEach(function(mk){if(!allMonths[mk])allMonths[mk]={rea:0};allMonths[mk].rea+=r.months[mk]})});
+  var mKeys=Object.keys(allMonths).sort();
+  if(mKeys.length){var mx=Math.max.apply(null,mKeys.map(function(k){return allMonths[k].rea}))||1;var mH='<div style="display:flex;flex-direction:column;gap:6px">';mKeys.forEach(function(mk){var re=allMonths[mk].rea;mH+='<div style="display:grid;grid-template-columns:65px 1fr 60px;align-items:center;gap:6px;font-size:11px"><span style="color:var(--text-secondary)">'+mk+'</span><div class="budget-track" style="height:14px"><div class="budget-fill ok" style="width:'+(re/mx*100).toFixed(0)+'%;height:100%"></div></div><span style="font-weight:600;text-align:right;font-size:10px">'+fK(re)+'</span></div>'});mH+='</div>';document.getElementById('budgetChart').innerHTML=mH}else{document.getElementById('budgetChart').innerHTML='<p style="color:var(--text-light);font-size:12px">Sem dados mensais</p>'}
+  // Toggle buttons
+  document.getElementById('budgetToggle').innerHTML=['cat','proj','forn'].map(function(g){var lb={cat:'Categoria',proj:'Projeto',forn:'Fornecedor'}[g];return'<button class="nav-tab'+(budgetGroupBy===g?' active':'')+'" style="padding:4px 12px;font-size:11px;border-radius:6px" onclick="budgetGroupBy=\''+g+'\';renderBudget()">'+lb+'</button>'}).join('');
+  // Project filter for detail
+  var sel=document.getElementById('budgetProjFilter'),curVal=sel.value;
+  var projs={};rows.forEach(function(r){if(r.proj)projs[r.proj]=1});
+  sel.innerHTML='<option value="">Todos os Projetos</option>';Object.keys(projs).sort().forEach(function(pid){var pn=projName(pid);sel.innerHTML+='<option value="'+pid+'"'+(curVal===pid?' selected':'')+'>'+pid+' — '+pn+'</option>'});
+  renderBudgetDetail()}
+function projName(pid){if(!pid)return'';var p=D.projetos.find(function(x){return V(x['ID'])===pid});return p?V(p['Projeto']):pid}
+function renderBudgetDetail(){
+  var filt=document.getElementById('budgetProjFilter').value;
+  var rows=filt?D.budgetRows.filter(function(r){return r.proj===filt}):D.budgetRows;
+  var groups={},gKey=budgetGroupBy;
+  rows.forEach(function(r){
+    var key=gKey==='cat'?r.cat:gKey==='proj'?(r.proj||'Sem projeto'):r.forn||'Sem fornecedor';
+    if(!groups[key])groups[key]={orc:0,rea:0,items:[],projId:gKey==='proj'?r.proj:''};
+    groups[key].orc+=r.orc;groups[key].rea+=r.rea;groups[key].items.push(r)});
+  var subLabel={cat:function(r){var parts=[];if(r.forn)parts.push(r.forn);if(r.proj)parts.push(r.proj+' — '+projName(r.proj));return parts.join(' · ')||'—'},proj:function(r){var parts=[];if(r.cat)parts.push(r.cat);if(r.forn)parts.push(r.forn);return parts.join(' · ')||'—'},forn:function(r){var parts=[];if(r.cat)parts.push(r.cat);if(r.proj)parts.push(r.proj+' — '+projName(r.proj));return parts.join(' · ')||'—'}}[gKey];
+  var h='';Object.keys(groups).sort().forEach(function(gk,gi){
+    var g=groups[gk],pc=g.orc>0?Math.round(g.rea/g.orc*100):0;
+    var label=gKey==='proj'?(gk!=='Sem projeto'?gk+' — '+projName(gk):gk):gk;
+    h+='<div style="border-bottom:1px solid var(--bg-subtle)">';
+    h+='<div class="risk-row" style="grid-template-columns:auto 1fr 90px 90px 50px;padding:10px 0;cursor:pointer" onclick="var el=document.getElementById(\'bd-'+gi+'\');el.style.display=el.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.gantt-expand-btn\').classList.toggle(\'expanded\');this.querySelector(\'.gantt-expand-btn\').textContent=el.style.display===\'none\'?\'+\':\'−\'">';
+    h+='<div class="gantt-expand-btn" style="width:20px;height:20px;font-size:11px">+</div>';
+    h+='<div><strong style="font-size:12px;color:var(--navy)">'+label+'</strong><div style="font-size:10px;color:var(--text-secondary)">'+g.items.length+' lançamento(s)</div></div>';
+    h+='<div style="text-align:right;font-size:11px"><div style="color:var(--text-secondary)">Orçado</div><div style="font-weight:600">'+fK(g.orc)+'</div></div>';
+    h+='<div style="text-align:right;font-size:11px"><div style="color:var(--text-secondary)">Realizado</div><div style="font-weight:600">'+fK(g.rea)+'</div></div>';
+    h+='<div style="text-align:right"><span class="status-pill '+(pc>90?'critical':pc>70?'attention':'on-track')+'" style="font-size:9px">'+pc+'%</span></div>';
+    h+='</div>';
+    h+='<div id="bd-'+gi+'" style="display:none;padding:0 0 8px 28px">';
+    g.items.forEach(function(r){
+      var rpc=r.orc>0?Math.round(r.rea/r.orc*100):0;
+      h+='<div style="display:grid;grid-template-columns:1fr 90px 90px 50px;padding:5px 0;border-top:1px solid rgba(0,0,0,.04);font-size:11px;align-items:center">';
+      h+='<div style="color:var(--text-secondary)">'+subLabel(r)+'</div>';
+      h+='<div style="text-align:right;color:var(--text-secondary)">'+fK(r.orc)+'</div>';
+      h+='<div style="text-align:right;font-weight:500">'+fK(r.rea)+'</div>';
+      h+='<div style="text-align:right;font-size:10px;color:'+(rpc>90?'var(--red)':rpc>70?'var(--yellow)':'var(--green)')+'">'+rpc+'%</div>';
+      h+='</div>'});
+    h+='</div></div>'});
+  document.getElementById('budgetDetail').innerHTML=h||'<p style="color:var(--text-light);font-size:12px">Sem dados</p>'}
+
 
 function renderBoard(){
   const pr=D.projetos,ri=D.riscos.filter(r=>V(r['Tipo']).toLowerCase().includes('risco')),im=D.riscos.filter(r=>V(r['Tipo']).toLowerCase().includes('imped')),dc=D.decisoes.filter(r=>V(r['Tipo']).toLowerCase().includes('decis')),wn=D.decisoes.filter(r=>V(r['ID']||'').match(/^C/i));
   const tp=pr.length,cp=pr.filter(r=>sC(V(r['Status']))=='completed').length;
   let avg=tp?pr.reduce((s,r)=>{let v=P(r['% Avanço']||r['% Avanco']||'0');if(v>0&&v<=1)v=v*100;return s+v},0)/tp:0;avg=Math.round(avg);
-  const bs=D.budgetSummary,tot=N(bs.tot||0),rea=N(bs.rea||0);
+  var bTotOrc=0,bTotRea=0;D.budgetRows.forEach(function(r){bTotOrc+=r.orc;bTotRea+=r.rea});
   const hrisk=ri.filter(r=>svC(V(r['Severidade']))=='high');
-  let h=`<div class="story-card highlight"><h3>📊 Status do Programa</h3><p>${tp} projetos em andamento, ${cp} concluído(s). Avanço geral: <strong>${avg}%</strong>. Orçamento utilizado: <strong>${tot>0?Math.round(rea/tot*100):0}%</strong> (${fK(rea)} de ${fK(tot)}).</p></div>`;
+  let h=`<div class="story-card highlight"><h3>📊 Status do Programa</h3><p>${tp} projetos em andamento, ${cp} concluído(s). Avanço geral: <strong>${avg}%</strong>. Orçamento utilizado: <strong>${bTotOrc>0?Math.round(bTotRea/bTotOrc*100):0}%</strong> (${fK(bTotRea)} de ${fK(bTotOrc)}).</p></div>`;
   if(wn.length)h+=`<div class="story-card success"><h3>🏆 Principais Conquistas</h3><ul>${wn.map(w=>`<li>${V(w['Descrição']||w['Descricao']||'')}</li>`).join('')}</ul></div>`;
   // Próximos marcos - ordenados por Fim Planejado
   const upcoming=D.etapas.filter(e=>sC(V(e['Status']))!='completed').sort(function(a,b){var da=pM(V(a['Fim Planejado']||a['Fim']||'')),db=pM(V(b['Fim Planejado']||b['Fim']||''));if(!da)return 1;if(!db)return-1;return da.localeCompare(db)}).slice(0,5);
@@ -260,7 +299,7 @@ function loadDefaultData(){ loadData({
     'Organograma':[{'Nível':'Sponsor',Papel:'Sponsor',Nome:'Ricardo Santos','Cargo / Título':'VP Operações','Área':'Operações'},{'Nível':'Comitê Executivo',Papel:'Membro',Nome:'Marcelo Ribeiro','Cargo / Título':'Diretor de TI','Área':'TI'},{'Nível':'Comitê Executivo',Papel:'Membro',Nome:'Claudia Souza','Cargo / Título':'Diretora de Qualidade','Área':'Qualidade'},{'Nível':'Comitê Executivo',Papel:'Membro',Nome:'Paulo Figueiredo','Cargo / Título':'Diretor Financeiro','Área':'Financeiro'},{'Nível':'Gestão do Programa',Papel:'Gerente de Programa',Nome:'Lucas Ferreira','Cargo / Título':'Gerente de Programa','Área':'TI'},{'Nível':'Gestão do Programa',Papel:'PMO',Nome:'Daniela Borges','Cargo / Título':'Analista de Projetos','Área':'TI'},{'Nível':'Líder Arquitetura/Infra',Papel:'Consultor',Nome:'Thiago Gomes','Cargo / Título':'Consultor Softexpert','Área':'Softexpert'},{'Nível':'Líder Arquitetura/Infra',Papel:'Infra',Nome:'Rafael Nunes','Cargo / Título':'Analista de Infraestrutura','Área':'TI'},{'Nível':'Decisor Go-NoGo',Papel:'Decisora',Nome:'Ana Martins','Cargo / Título':'Gestora de Qualidade','Área':'Qualidade'},{'Nível':'Decisor Go-NoGo',Papel:'Decisora',Nome:'Helena Reis','Cargo / Título':'Gestora de Compliance','Área':'Compliance'},{'Nível':'Decisor Go-NoGo',Papel:'Decisor',Nome:'Vitor Lima','Cargo / Título':'Gestor de Suprimentos','Área':'Suprimentos'},{'Nível':'Time Projeto',Papel:'Key User Documentos',Nome:'Ana Martins','Área':'Qualidade & Compliance'},{'Nível':'Time Projeto',Papel:'Key User Documentos',Nome:'Beatriz Campos','Área':'Qualidade & Compliance'},{'Nível':'Time Projeto',Papel:'Key User NC',Nome:'Carlos Silva','Área':'Não Conformidades'},{'Nível':'Time Projeto',Papel:'Key User NC',Nome:'Larissa Mendes','Área':'Não Conformidades'},{'Nível':'Time Projeto',Papel:'Key User BPM',Nome:'Fernanda Rocha','Área':'Processos (BPM)'},{'Nível':'Time Projeto',Papel:'Key User BPM',Nome:'Diego Souza','Área':'Processos (BPM)'},{'Nível':'Time Projeto',Papel:'Key User Riscos',Nome:'Roberto Almeida','Área':'Riscos & Compliance'},{'Nível':'Time Projeto',Papel:'Key User Riscos',Nome:'Camila Prado','Área':'Riscos & Compliance'},{'Nível':'Time Projeto',Papel:'Key User Auditorias',Nome:'Patrícia Lima','Área':'Auditoria Interna'},{'Nível':'Time Projeto',Papel:'Key User Auditorias',Nome:'Gustavo Teixeira','Área':'Auditoria Interna'},{'Nível':'Time Projeto',Papel:'Key User Indicadores',Nome:'Marcos Oliveira','Área':'Planejamento Estratégico'},{'Nível':'Time Projeto',Papel:'Key User Indicadores',Nome:'Renata Vieira','Área':'Planejamento Estratégico'},{'Nível':'Time Projeto',Papel:'Key User Fornecedores',Nome:'Juliana Costa','Área':'Suprimentos'},{'Nível':'Time Projeto',Papel:'Key User Fornecedores',Nome:'André Barros','Área':'Suprimentos'}],
     'RACI':[{Atividade:'Definição de escopo',Sponsor:'A','Comitê Exec.':'C','Ger. Programa':'R','Líder Arq.':'C','Decisores Go-NoGo':'I','Key Users':'C'},{Atividade:'Configuração dos módulos',Sponsor:'I','Comitê Exec.':'I','Ger. Programa':'A','Líder Arq.':'C','Decisores Go-NoGo':'I','Key Users':'R'},{Atividade:'Homologação / Testes',Sponsor:'I','Comitê Exec.':'I','Ger. Programa':'A','Líder Arq.':'C','Decisores Go-NoGo':'C','Key Users':'R'},{Atividade:'Decisão de Go-NoGo',Sponsor:'A','Comitê Exec.':'C','Ger. Programa':'C','Líder Arq.':'I','Decisores Go-NoGo':'R','Key Users':'I'},{Atividade:'Gestão de mudanças',Sponsor:'C','Comitê Exec.':'A','Ger. Programa':'R','Líder Arq.':'I','Decisores Go-NoGo':'I','Key Users':'C'},{Atividade:'Treinamento de usuários',Sponsor:'I','Comitê Exec.':'I','Ger. Programa':'A','Líder Arq.':'C','Decisores Go-NoGo':'I','Key Users':'R'},{Atividade:'Integração com SAP',Sponsor:'I','Comitê Exec.':'C','Ger. Programa':'A','Líder Arq.':'R','Decisores Go-NoGo':'I','Key Users':'C'},{Atividade:'Go-Live e estabilização',Sponsor:'A','Comitê Exec.':'I','Ger. Programa':'R','Líder Arq.':'C','Decisores Go-NoGo':'C','Key Users':'C'},{Atividade:'Monitoramento de riscos',Sponsor:'I','Comitê Exec.':'A','Ger. Programa':'R','Líder Arq.':'C','Decisores Go-NoGo':'I','Key Users':'C'},{Atividade:'Aprovação de budget',Sponsor:'A','Comitê Exec.':'R','Ger. Programa':'C','Líder Arq.':'I','Decisores Go-NoGo':'I','Key Users':'I'}],
     'Capacitação':[{Indicador:'Key Users Capacitados',Realizado:8,Meta:9},{Indicador:'Usuários Finais Treinados',Realizado:67,Meta:150},{Indicador:'Sessões de Treinamento',Realizado:18,Meta:35},{Indicador:'Satisfação (NPS)',Realizado:78,Meta:100}],
-    'Budget':[{'Seção':'Resumo',Item:'Orçamento Total (R$)','Orçado (R$)':1200000,'Realizado (R$)':''},{'Seção':'Resumo',Item:'Realizado (R$)','Orçado (R$)':'','Realizado (R$)':620000},{'Seção':'Resumo',Item:'Comprometido (R$)','Orçado (R$)':380000,'Realizado (R$)':''},{'Seção':'Resumo',Item:'Saldo Disponível (R$)','Orçado (R$)':200000,'Realizado (R$)':''},{'Seção':'Categoria',Item:'Licenças Softexpert','Orçado (R$)':450000,'Realizado (R$)':420000},{'Seção':'Categoria',Item:'Consultoria & Implantação','Orçado (R$)':350000,'Realizado (R$)':280000},{'Seção':'Categoria',Item:'Treinamentos','Orçado (R$)':120000,'Realizado (R$)':95000},{'Seção':'Categoria',Item:'Infraestrutura & Integração','Orçado (R$)':180000,'Realizado (R$)':155000},{'Seção':'Categoria',Item:'Contingência','Orçado (R$)':100000,'Realizado (R$)':50000},{'Seção':'Mensal',Item:'Jul/2025','Orçado (R$)':80000,'Realizado (R$)':85000},{'Seção':'Mensal',Item:'Ago/2025','Orçado (R$)':90000,'Realizado (R$)':95000},{'Seção':'Mensal',Item:'Set/2025','Orçado (R$)':85000,'Realizado (R$)':75000},{'Seção':'Mensal',Item:'Out/2025','Orçado (R$)':100000,'Realizado (R$)':110000},{'Seção':'Mensal',Item:'Nov/2025','Orçado (R$)':95000,'Realizado (R$)':105000},{'Seção':'Mensal',Item:'Dez/2025','Orçado (R$)':100000,'Realizado (R$)':90000},{'Seção':'Mensal',Item:'Jan/2026','Orçado (R$)':80000,'Realizado (R$)':60000}],
+    'Budget':[{Categoria:'Licenças Softexpert',Fornecedor:'SoftExpert','ID Projeto':'','Orçado (R$)':450000,'Jul/2025':35000,'Ago/2025':35000,'Set/2025':35000,'Out/2025':35000,'Nov/2025':35000,'Dez/2025':35000,'Jan/2026':35000,'Fev/2026':35000},{Categoria:'Consultoria & Implantação',Fornecedor:'SoftExpert','ID Projeto':'P01','Orçado (R$)':120000,'Jul/2025':15000,'Ago/2025':15000,'Set/2025':12000,'Out/2025':18000,'Nov/2025':15000,'Dez/2025':10000,'Jan/2026':10000,'Fev/2026':8000},{Categoria:'Consultoria & Implantação',Fornecedor:'SoftExpert','ID Projeto':'P03','Orçado (R$)':80000,'Set/2025':5000,'Out/2025':8000,'Nov/2025':10000,'Dez/2025':10000,'Jan/2026':8000,'Fev/2026':7000},{Categoria:'Consultoria & Implantação',Fornecedor:'Deloitte','ID Projeto':'P02','Orçado (R$)':150000,'Jul/2025':20000,'Ago/2025':25000,'Set/2025':18000,'Out/2025':22000,'Nov/2025':20000,'Dez/2025':15000,'Jan/2026':12000,'Fev/2026':10000},{Categoria:'Treinamentos',Fornecedor:'SoftExpert','ID Projeto':'P01','Orçado (R$)':60000,'Jul/2025':5000,'Ago/2025':8000,'Set/2025':7000,'Out/2025':6000,'Nov/2025':5000,'Dez/2025':4000,'Jan/2026':3000,'Fev/2026':2000},{Categoria:'Treinamentos',Fornecedor:'SoftExpert','ID Projeto':'P02','Orçado (R$)':60000,'Jul/2025':5000,'Ago/2025':7000,'Set/2025':5000,'Out/2025':6000,'Nov/2025':8000,'Dez/2025':6000,'Jan/2026':5000,'Fev/2026':3000},{Categoria:'Infraestrutura & Integração',Fornecedor:'Plano&Plano (interno)','ID Projeto':'P04','Orçado (R$)':100000,'Jul/2025':10000,'Ago/2025':12000,'Set/2025':15000,'Out/2025':18000,'Nov/2025':15000,'Dez/2025':15000,'Jan/2026':10000,'Fev/2026':8000},{Categoria:'Infraestrutura & Integração',Fornecedor:'AWS','ID Projeto':'','Orçado (R$)':80000,'Jul/2025':5000,'Ago/2025':5000,'Set/2025':5000,'Out/2025':8000,'Nov/2025':8000,'Dez/2025':8000,'Jan/2026':8000,'Fev/2026':8000},{Categoria:'Contingência',Fornecedor:'','ID Projeto':'','Orçado (R$)':100000,'Ago/2025':3000,'Out/2025':2000,'Nov/2025':10000,'Dez/2025':5000,'Jan/2026':5000,'Fev/2026':5000}],
     'Histórico':[{Data:'03/02/2026','% Avanço Geral':3.2},{Data:'04/02/2026','% Avanço Geral':3.2},{Data:'05/02/2026','% Avanço Geral':3.5},{Data:'06/02/2026','% Avanço Geral':3.7},{Data:'07/02/2026','% Avanço Geral':3.7},{Data:'10/02/2026','% Avanço Geral':4.0},{Data:'11/02/2026','% Avanço Geral':4.0},{Data:'12/02/2026','% Avanço Geral':4.2},{Data:'13/02/2026','% Avanço Geral':4.5}]
   })
 }
