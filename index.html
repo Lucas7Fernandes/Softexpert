@@ -140,7 +140,7 @@ function svC(s){s=V(s).toLowerCase();return s.includes('alt')||s.includes('crít
 function toast(m,ok){const t=document.createElement('div');t.className='toast';t.style.background=ok?'var(--green)':'var(--red)';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3500)}
 
 // === PLANILHA ===
-const PLANILHA_PATH='https://lucas7fernandes.github.io/Softexpert/main/template-softexpert.xlsx'; // ENDEREÇO PLANILHA
+const PLANILHA_PATH='https://lucas7fernandes.github.io/Softexpert/template-softexpert.xlsx'; // ENDEREÇO PLANILHA
 function carregarPlanilha(){fetch(PLANILHA_PATH).then(r=>{if(!r.ok)throw new Error('N/A');return r.arrayBuffer()}).then(buf=>{const wb=XLSX.read(buf,{type:'array'});const S={};wb.SheetNames.forEach(n=>{S[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:''})});loadData(S);toast('✓ Planilha carregada',true)}).catch(()=>{loadDefaultData()})}
 
 // === DATA ===
