@@ -195,7 +195,8 @@ function renderKPIs(){
     `<div class="kpi-card accent-blue" onclick="goTab('budget')"><div class="kpi-label">Orçamento</div><div class="kpi-value">${bPct}%</div><div class="kpi-sub">${fK(totRea)} de ${fK(totOrc)} utilizado</div></div>`}
 
 function renderGantt(){const pr=fp(D.projetos,'ID'),et=D.etapas,tI=todayMI(),tP=((tI+.5)/18*100).toFixed(2);let h='<div class="gantt-header"><div class="gantt-header-label">Projeto / Etapa</div><div class="gantt-months">';ML.forEach((m,i)=>h+=`<div class="gantt-month" style="${i===tI?'color:var(--coral);font-weight:700':''}">${m}</div>`);h+='</div></div><div style="position:relative"><div class="gantt-today-global" style="left:calc(280px + (100% - 280px) * '+tP+' / 100)"></div>';
-function calcDev(fpDate,frDate){if(!fpDate)return{days:0,cls:'ontime',txt:''};var fp2=new Date(fpDate.replace(/(\d{4})-(\d{2})/,'$1/$2')),today=new Date();var end=frDate?new Date(frDate.replace(/(\d{4})-(\d{2})/,'$1/$2')):today;var diff=Math.round((end-fp2)/(1000*60*60*24));if(Math.abs(diff)<=3)return{days:0,cls:'ontime',txt:'No prazo'};if(diff>0)return{days:diff,cls:'late',txt:'+'+diff+'d'};return{days:diff,cls:'early',txt:diff+'d'}}
+function parseDateObj(d){if(!d)return null;var s=V(d);if(!s||s.length<6)return null;var m;m=s.match(/(\d{4})-(\d{2})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);m=s.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);var n=Number(s);if(n>40000&&n<60000){var epoch=new Date(1899,11,30);epoch.setDate(epoch.getDate()+n);return epoch}return null}
+function calcDev(fpRaw,frRaw){var fpD=parseDateObj(fpRaw);if(!fpD)return{days:0,cls:'ontime',txt:''};var frD=parseDateObj(frRaw);var endD=frD||new Date();var diff=Math.round((endD-fpD)/(86400000));if(Math.abs(diff)<=3)return{days:0,cls:'ontime',txt:'No prazo'};if(diff>0)return{days:diff,cls:'late',txt:'+'+diff+'d'};return{days:diff,cls:'early',txt:diff+'d'}}
 function dateToMK(d){if(!d)return'';var s=V(d);var m=s.match(/(\d{4})-(\d{2})/);if(m)return m[1]+'-'+m[2];return pM(s)}
 pr.forEach((p,pi)=>{const id=V(p['ID']||'p'+pi),nm=V(p['Projeto']),ar=V(p['Área']||p['Area']||''),st=sC(V(p['Status']));let pg=P(p['% Avanço']||p['% Avanco']||'0');if(pg>0&&pg<=1)pg=Math.round(pg*100);
 var ipk=pM(V(p['Início Planejado']||p['Inicio Planejado']||'')),fpk=pM(V(p['Fim Planejado']||''));
@@ -209,7 +210,7 @@ var rStart=iri>=0?iri:ipi;
 var rEnd=fri>=0?fri:(fpi>=0?Math.min(tI,fpi):tI);
 var rL=rStart>=0?(rStart/18*100).toFixed(2)+'%':'0%';
 var rW=(rStart>=0&&rEnd>=0)?((Math.max(rEnd-rStart+1,1))/18*100).toFixed(2)+'%':'0%';
-var dev=calcDev(V(p['Fim Planejado']||''),V(p['Fim Real']||''));
+var dev=calcDev(p['Fim Planejado']||'',p['Fim Real']||'');
 var hasDelay=dev.days>3&&fpi>=0;var hasAhead=dev.days<-3&&fpi>=0;
 var delL='',delW='';
 if(hasDelay){var dStart=fpi+1;var dEnd=fri>=0?fri:tI;delL=(dStart/18*100).toFixed(2)+'%';delW=(Math.max(dEnd-dStart+1,1)/18*100).toFixed(2)+'%'}
