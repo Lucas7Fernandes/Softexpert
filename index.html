@@ -24,7 +24,7 @@
 .gantt-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch}.gantt-container{min-width:900px}.gantt-header{display:grid;grid-template-columns:280px 1fr;border-bottom:2px solid var(--bg-subtle);margin-bottom:2px}.gantt-header-label{padding:6px 12px;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);font-weight:600}.gantt-months{display:grid;grid-template-columns:repeat(18,1fr)}.gantt-month{text-align:center;font-size:8px;color:var(--text-light);padding:6px 0;font-weight:500;text-transform:uppercase;letter-spacing:.3px}
 .gantt-row{display:grid;grid-template-columns:280px 1fr;align-items:center;transition:background .15s;cursor:pointer}.gantt-row:hover{background:rgba(27,42,74,.03)}.gantt-row.phase-row{background:rgba(0,0,0,.008)}.gantt-row.phase-row .gantt-row-label{padding-left:36px}
 .gantt-row-label{padding:7px 12px;display:flex;align-items:center;gap:8px;min-height:36px}.gantt-expand-btn{width:18px;height:18px;border-radius:4px;border:1px solid var(--bg-subtle);background:var(--bg-card);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-secondary);flex-shrink:0;transition:all .2s;cursor:pointer;line-height:1}.gantt-expand-btn:hover{border-color:var(--navy);color:var(--navy)}.gantt-expand-btn.expanded{background:var(--navy);color:white;border-color:var(--navy)}
-.gantt-row-info{flex:1;min-width:0}.gantt-row-name{font-size:12px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gantt-row-area{font-size:9px;color:var(--text-secondary)}.phase-row .gantt-row-name{font-weight:500;font-size:11px;color:var(--text-secondary)}.gantt-row-status{flex-shrink:0}
+.gantt-row-info{flex:1;min-width:0}.gantt-row-name{font-size:12px;font-weight:600;color:var(--navy);word-break:break-word}.gantt-row-area{font-size:9px;color:var(--text-secondary)}.phase-row .gantt-row-name{font-weight:500;font-size:11px;color:var(--text-secondary)}.gantt-row-status{flex-shrink:0}
 .gantt-bars{display:grid;grid-template-columns:repeat(18,1fr);position:relative;height:36px;align-items:center}.gantt-bar{border-radius:4px;height:16px;position:absolute;top:10px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:white;letter-spacing:.3px;transition:all .3s;cursor:default}.gantt-bar:hover{height:20px;top:8px;filter:brightness(1.1)}.gantt-bar.completed-bar{background:linear-gradient(90deg,var(--blue),#60A5FA)}.gantt-bar.on-track-bar{background:linear-gradient(90deg,var(--green),#34D399)}.gantt-bar.attention-bar{background:linear-gradient(90deg,var(--yellow),#FBBF24)}.gantt-bar.not-started-bar{background:linear-gradient(90deg,#9CA3AF,#D1D5DB)}
 .gantt-baseline{position:absolute;top:12px;height:12px;border-radius:3px;background:rgba(27,42,74,.1);border:1px dashed rgba(27,42,74,.25)}
 .gantt-delay{position:absolute;top:10px;height:16px;border-radius:0 4px 4px 0;background:repeating-linear-gradient(135deg,var(--red),var(--red) 2px,rgba(220,38,38,.6) 2px,rgba(220,38,38,.6) 4px);opacity:.7}
@@ -83,12 +83,12 @@
 
   <!-- TAB: RISCOS & IMPEDIMENTOS -->
   <div class="tab-content" id="tab-risks">
-    <div class="section-header" style="cursor:pointer" onclick="toggleSection('risksCard',this)"><h2>▶ Riscos Ativos</h2><div class="line"></div><div class="count" id="riskCount">0</div></div>
-    <div class="card" style="margin-bottom:20px;display:none" id="risksCard"><div class="card-body" id="risksBox"></div></div>
-    <div class="section-header" style="cursor:pointer" onclick="toggleSection('impCard',this)"><h2>▶ Impedimentos</h2><div class="line"></div><div class="count" id="impCount">0</div></div>
-    <div class="card" style="margin-bottom:20px;display:none" id="impCard"><div class="card-body" id="impBox"></div></div>
-    <div class="section-header" style="cursor:pointer" onclick="toggleSection('decCard',this)"><h2>▶ Decisões e Itens Pendentes</h2><div class="line"></div><div class="count" id="decCount">0</div></div>
-    <div class="card" style="display:none" id="decCard"><div class="card-body" id="decisionsBox"></div></div>
+    <div class="section-header" style="cursor:pointer" onclick="toggleSection('risksCard',this)"><h2>▼ Riscos Ativos</h2><div class="line"></div><div class="count" id="riskCount">0</div></div>
+    <div class="card" style="margin-bottom:20px" id="risksCard"><div class="card-body" id="risksBox"></div></div>
+    <div class="section-header" style="cursor:pointer" onclick="toggleSection('impCard',this)"><h2>▼ Impedimentos</h2><div class="line"></div><div class="count" id="impCount">0</div></div>
+    <div class="card" style="margin-bottom:20px" id="impCard"><div class="card-body" id="impBox"></div></div>
+    <div class="section-header" style="cursor:pointer" onclick="toggleSection('decCard',this)"><h2>▼ Decisões e Itens Pendentes</h2><div class="line"></div><div class="count" id="decCount">0</div></div>
+    <div class="card" id="decCard"><div class="card-body" id="decisionsBox"></div></div>
   </div>
 
   <!-- TAB: GOVERNANÇA -->
@@ -199,14 +199,14 @@ function fDate(d){var obj=parseDateObj(d);if(!obj)return V(d);var dd=('0'+obj.ge
 function calcDev(fpRaw,frRaw){var fpD=parseDateObj(fpRaw);if(!fpD)return{days:0,cls:'ontime',txt:''};var frD=parseDateObj(frRaw);var endD=frD||new Date();var diff=Math.round((endD-fpD)/(86400000));if(Math.abs(diff)<=3)return{days:0,cls:'ontime',txt:'No prazo'};if(diff>0)return{days:diff,cls:'late',txt:'+'+diff+'d'};return{days:diff,cls:'early',txt:diff+'d'}}
 function renderGantt(){var pr=fp(D.projetos,'ID').slice().sort(function(a,b){var da=pM(V(a['Início Planejado']||a['Inicio Planejado']||'')),db=pM(V(b['Início Planejado']||b['Inicio Planejado']||''));if(!da)return 1;if(!db)return-1;return da.localeCompare(db)});var et=D.etapas,tI=todayMI(),tP=((tI+.5)/18*100).toFixed(2);let h='<div class="gantt-header"><div class="gantt-header-label">Projeto / Etapa</div><div class="gantt-months">';ML.forEach((m,i)=>h+=`<div class="gantt-month" style="${i===tI?'color:var(--coral);font-weight:700':''}">${m}</div>`);h+='</div></div>';
 // Legend
-h+='<div style="display:flex;gap:16px;padding:8px 12px;font-size:10px;color:var(--text-secondary);flex-wrap:wrap;border-bottom:1px solid var(--bg-subtle)">';
+h+='<div style="display:flex;gap:16px;padding:8px 12px;font-size:10px;color:var(--text-secondary);flex-wrap:wrap;border-bottom:1px solid var(--bg-subtle);align-items:center">';
+h+='<strong style="color:var(--navy);font-size:10px">Legenda:</strong>';
 h+='<span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:8px;border-radius:2px;background:rgba(27,42,74,.1);border:1px dashed rgba(27,42,74,.25);display:inline-block"></span> Planejado (baseline)</span>';
 h+='<span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:8px;border-radius:2px;background:linear-gradient(90deg,var(--green),#34D399);display:inline-block"></span> No Prazo</span>';
 h+='<span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:8px;border-radius:2px;background:linear-gradient(90deg,var(--yellow),#FBBF24);display:inline-block"></span> Atenção</span>';
 h+='<span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:8px;border-radius:2px;background:linear-gradient(90deg,var(--blue),#60A5FA);display:inline-block"></span> Concluído</span>';
 h+='<span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:8px;border-radius:2px;background:repeating-linear-gradient(135deg,var(--red),var(--red) 2px,rgba(220,38,38,.6) 2px,rgba(220,38,38,.6) 4px);display:inline-block"></span> Atraso</span>';
 h+='<span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:8px;border-radius:2px;background:linear-gradient(90deg,#9CA3AF,#D1D5DB);display:inline-block"></span> Não Iniciado</span>';
-h+='<span style="display:flex;align-items:center;gap:4px"><span style="width:2px;height:12px;background:var(--coral);display:inline-block"></span> Hoje</span>';
 h+='</div>';
 h+='<div style="position:relative"><div class="gantt-today-global" style="left:calc(280px + (100% - 280px) * '+tP+' / 100)"></div>';
 pr.forEach((p,pi)=>{const id=V(p['ID']||'p'+pi),nm=V(p['Projeto']),ar=V(p['Área']||p['Area']||''),st=sC(V(p['Status']));let pg=P(p['% Avanço']||p['% Avanco']||'0');if(pg>0&&pg<=1)pg=Math.round(pg*100);
