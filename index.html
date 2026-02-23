@@ -136,7 +136,7 @@ function N(x){let s=V(x).replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.'
 function P(x){let n=parseFloat(V(x).replace('%','').replace(',','.'));return isNaN(n)?0:n}
 function fK(n){var neg=n<0?'-':'';var a=Math.abs(n);if(a>=1e6)return neg+'R$ '+(a/1e6).toFixed(1)+'M';if(a>=1e3)return neg+'R$ '+Math.round(a).toLocaleString('pt-BR');return neg+'R$ '+Math.round(a).toLocaleString('pt-BR')}
 function ini(n){if(!n)return'??';return n.split(' ').map(w=>w[0]).filter(Boolean).slice(0,2).join('').toUpperCase()}
-function pM(s){s=V(s);if(!s)return'';let m;if(/^\d{5}$/.test(s)){const d=new Date((parseInt(s)-25569)*86400000);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m)return m[3]+'-'+m[2].padStart(2,'0');m=s.match(/(\d{4})-(\d{2})/);if(m)return m[1]+'-'+m[2];m=s.match(/([a-zA-Z]{3})\/(\d{4})/i);if(m)return m[2]+'-'+(mNm[m[1].toLowerCase()]||'01');m=s.match(/([a-zA-Z]{3})\/(\d{2})/i);if(m)return'20'+m[2]+'-'+(mNm[m[1].toLowerCase()]||'01');m=s.match(/^(\d{2})\/(\d{4})$/);if(m)return m[2]+'-'+m[1];return''}
+function pM(s){if(!s)return'';var dObj=parseDateObj(s);if(dObj&&!isNaN(dObj.getTime()))return dObj.getFullYear()+'-'+String(dObj.getMonth()+1).padStart(2,'0');s=V(s);if(!s)return'';let m;m=s.match(/(\d{4})-(\d{2})/);if(m)return m[1]+'-'+m[2];m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m)return m[3]+'-'+m[2].padStart(2,'0');m=s.match(/([a-zA-Z]{3})\/(\d{4})/i);if(m)return m[2]+'-'+(mNm[m[1].toLowerCase()]||'01');m=s.match(/([a-zA-Z]{3})\/(\d{2})/i);if(m)return'20'+m[2]+'-'+(mNm[m[1].toLowerCase()]||'01');m=s.match(/^(\d{2})\/(\d{4})$/);if(m)return m[2]+'-'+m[1];return''}
 function sC(s){s=V(s).toLowerCase();if(s.includes('conclu')||s.includes('complet'))return'completed';if(s.includes('prazo')||s.includes('andamento'))return'on-track';if(s.includes('aten'))return'attention';if(s.includes('crít')||s.includes('crit')||s.includes('bloq'))return'critical';return'not-started'}
 function sN(c){return{completed:'Concluído','on-track':'No Prazo',attention:'Atenção',critical:'Crítico','not-started':'Não Iniciado'}[c]||c}
 function bC(c){return{completed:'completed-bar','on-track':'on-track-bar',attention:'attention-bar'}[c]||'not-started-bar'}
@@ -197,7 +197,11 @@ function renderKPIs(){
 function parseDateObj(d){if(!d)return null;if(typeof d==='number'&&d>40000&&d<60000){var epoch=new Date(1899,11,30);epoch.setDate(epoch.getDate()+d);return epoch}var s=V(d);if(!s||s.length<5)return null;var m;m=s.match(/(\d{4})-(\d{2})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);m=s.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);var n=Number(s);if(n>40000&&n<60000){var ep=new Date(1899,11,30);ep.setDate(ep.getDate()+n);return ep}return null}
 function fDate(d){var obj=parseDateObj(d);if(!obj)return V(d);var dd=('0'+obj.getDate()).slice(-2),mm=('0'+(obj.getMonth()+1)).slice(-2),yy=obj.getFullYear();return dd+'/'+mm+'/'+yy}
 function calcDev(fpRaw,frRaw){var fpD=parseDateObj(fpRaw);if(!fpD)return{days:0,cls:'ontime',txt:''};var frD=parseDateObj(frRaw);var endD=frD||new Date();var diff=Math.round((endD-fpD)/(86400000));if(Math.abs(diff)<=3)return{days:0,cls:'ontime',txt:'No prazo'};if(diff>0)return{days:diff,cls:'late',txt:'+'+diff+'d'};return{days:diff,cls:'early',txt:diff+'d'}}
-function renderGantt(){var pr=fp(D.projetos,'ID').slice().sort(function(a,b){var da=pM(V(a['Início Planejado']||a['Inicio Planejado']||'')),db=pM(V(b['Início Planejado']||b['Inicio Planejado']||''));if(!da)return 1;if(!db)return-1;return da.localeCompare(db)});var et=D.etapas,tI=todayMI(),tP=((tI+.5)/18*100).toFixed(2);let h='<div class="gantt-header"><div class="gantt-header-label">Projeto / Etapa</div><div class="gantt-months">';ML.forEach((m,i)=>h+=`<div class="gantt-month" style="${i===tI?'color:var(--coral);font-weight:700':''}">${m}</div>`);h+='</div></div>';
+function renderGantt(){var pr=fp(D.projetos,'ID').slice().sort(function(a,b){var da=pM(V(a['Início Planejado']||a['Inicio Planejado']||'')),db=pM(V(b['Início Planejado']||b['Inicio Planejado']||''));if(!da)return 1;if(!db)return-1;return da.localeCompare(db)});var et=D.etapas,tI=todayMI(),tP=((tI+.5)/18*100).toFixed(2);
+var cw=100/18;// cell width in %
+function mPos(idx){return (idx*cw).toFixed(2)}// left edge of month cell
+function mW(s,e){return ((e-s+1)*cw).toFixed(2)}// width spanning months
+let h='<div class="gantt-header"><div class="gantt-header-label">Projeto / Etapa</div><div class="gantt-months">';ML.forEach((m,i)=>h+=`<div class="gantt-month" style="${i===tI?'color:var(--coral);font-weight:700':''}">${m}</div>`);h+='</div></div>';
 // Legend
 h+='<div style="display:flex;gap:16px;padding:8px 12px;font-size:10px;color:var(--text-secondary);flex-wrap:wrap;border-bottom:1px solid var(--bg-subtle);align-items:center">';
 h+='<strong style="color:var(--navy);font-size:10px">Legenda:</strong>';
@@ -216,30 +220,29 @@ var frk=pM(V(p['Fim Real']||''));
 var ipi=MK.indexOf(ipk),fpi=MK.indexOf(fpk);
 var iri=MK.indexOf(irk),fri=frk?MK.indexOf(frk):-1;
 // Baseline bar
-var bL=ipi>=0?(ipi/18*100).toFixed(2):'0';
-var bW=(ipi>=0&&fpi>=0)?((fpi-ipi+1)/18*100).toFixed(2):'0';
-// Real bar - extends to Fim Real if set, otherwise to today or Fim Planejado (whichever is less)
+var bL=ipi>=0?mPos(ipi):'0';
+var bW=(ipi>=0&&fpi>=0)?mW(ipi,fpi):'0';
+// Real bar
 var rS=iri>=0?iri:(ipi>=0?ipi:0);
 var rE;
 if(fri>=0){rE=fri}else if(st==='completed'&&fpi>=0){rE=fpi}else{rE=Math.min(tI,fpi>=0?fpi:tI)}
-var rL=(rS/18*100).toFixed(2);
-var rW=(Math.max(rE-rS+1,1)/18*100).toFixed(2);
+var rL=mPos(rS);
+var rW=mW(rS,rE);
 // Deviation calculation
 var dev=calcDev(p['Fim Planejado']||'',p['Fim Real']||'');
 // Delay extension: when real end > planned end
 var delayHtml='';
-if(fri>=0&&fpi>=0&&fri>fpi){var dL=((fpi+1)/18*100).toFixed(2);var dW=((fri-fpi)/18*100).toFixed(2);delayHtml='<div class="gantt-delay" style="left:'+dL+'%;width:'+dW+'%"></div>'}
-// Deviation label position: after the rightmost bar element
-var rightEdge=fri>=0&&fri>fpi?((fri+1)/18*100+0.5):((rE+1)/18*100+0.5);
+if(fri>=0&&fpi>=0&&fri>fpi){var dL=mPos(fpi+1);var dW=mW(fpi+1,fri);delayHtml='<div class="gantt-delay" style="left:'+dL+'%;width:'+dW+'%"></div>'}
+// Deviation label
 var devHtml='';
-if(dev.txt&&dev.cls!=='ontime'){var rightEdge=fri>=0&&fri>fpi?((fri+1)/18*100+0.5):((rE+1)/18*100+0.5);devHtml='<div style="position:absolute;top:2px;left:'+rightEdge.toFixed(1)+'%;font-size:9px;font-weight:700;white-space:nowrap" class="gantt-deviation '+dev.cls+'">'+dev.txt+'</div>'};
+if(dev.txt&&dev.cls!=='ontime'){var rightEdge=fri>=0&&fri>fpi?parseFloat(mPos(fri+1))+0.5:parseFloat(mPos(rE+1))+0.5;devHtml='<div style="position:absolute;top:2px;left:'+rightEdge.toFixed(1)+'%;font-size:9px;font-weight:700;white-space:nowrap" class="gantt-deviation '+dev.cls+'">'+dev.txt+'</div>'};
 h+=`<div class="gantt-row" onclick="togglePhases('${id}')"><div class="gantt-row-label"><div class="gantt-expand-btn" id="btn-${id}">+</div><div class="gantt-row-info"><div class="gantt-row-name" title="${nm}">${nm}</div><div class="gantt-row-area">${ar}</div></div><div class="gantt-row-status"><span class="status-pill ${st}" style="font-size:9px">${sN(st)}</span></div></div><div class="gantt-bars" style="overflow:visible">`;
-for(let i=0;i<18;i++)h+=`<div class="gantt-grid-line" style="left:${(i/18*100).toFixed(2)}%"></div>`;
+for(let i=0;i<18;i++)h+=`<div class="gantt-grid-line" style="left:${mPos(i)}%"></div>`;
 h+='<div class="gantt-baseline" style="left:'+bL+'%;width:'+bW+'%"></div>';
 h+=`<div class="gantt-bar ${bC(st)}" style="left:${rL}%;width:${rW}%">${pg}%</div>`;
 h+=delayHtml+devHtml;
 h+=`</div></div>`;
-const pe=fp(et).filter(e=>V(e['ID Projeto'])===id);h+=`<div class="gantt-phases-container" id="phases-${id}">`;pe.forEach(e=>{const en=V(e['Etapa']),es=sC(V(e['Status'])),esk=pM(V(e['Início Planejado']||e['Inicio Planejado']||e['Início']||e['Inicio']||'')),eek=pM(V(e['Fim Planejado']||e['Fim']||''));const esi=MK.indexOf(esk),eei=MK.indexOf(eek),eL=esi>=0?(esi/18*100).toFixed(2)+'%':'0%',eW=(esi>=0&&eei>=0)?((eei-esi+1)/18*100).toFixed(2)+'%':'0%';h+=`<div class="gantt-row phase-row"><div class="gantt-row-label"><div class="gantt-row-info"><div class="gantt-row-name">${en}</div></div></div><div class="gantt-bars">`;for(let i=0;i<18;i++)h+=`<div class="gantt-grid-line" style="left:${(i/18*100).toFixed(2)}%"></div>`;h+=`<div class="gantt-bar phase-bar ${bC(es)}" style="left:${eL};width:${eW}" title="${en}">${en}</div></div></div>`});h+='</div>'});h+='</div>';document.getElementById('ganttChart').innerHTML=h}
+const pe=fp(et).filter(e=>V(e['ID Projeto'])===id);h+=`<div class="gantt-phases-container" id="phases-${id}">`;pe.forEach(e=>{const en=V(e['Etapa']),es=sC(V(e['Status'])),esk=pM(V(e['Início Planejado']||e['Inicio Planejado']||e['Início']||e['Inicio']||'')),eek=pM(V(e['Fim Planejado']||e['Fim']||''));const esi=MK.indexOf(esk),eei=MK.indexOf(eek),eL=esi>=0?mPos(esi)+'%':'0%',eW=(esi>=0&&eei>=0)?mW(esi,eei)+'%':'0%';h+=`<div class="gantt-row phase-row"><div class="gantt-row-label"><div class="gantt-row-info"><div class="gantt-row-name">${en}</div></div></div><div class="gantt-bars">`;for(let i=0;i<18;i++)h+=`<div class="gantt-grid-line" style="left:${mPos(i)}%"></div>`;h+=`<div class="gantt-bar phase-bar ${bC(es)}" style="left:${eL};width:${eW}" title="${en}">${en}</div></div></div>`});h+='</div>'});h+='</div>';document.getElementById('ganttChart').innerHTML=h}
 function togglePhases(id){const c=document.getElementById('phases-'+id),b=document.getElementById('btn-'+id);if(!c||!b)return;c.classList.toggle('open');b.classList.toggle('expanded');b.textContent=c.classList.contains('open')?'−':'+'}
 
 function renderWins(){const wn=D.decisoes.filter(r=>V(r['ID']||'').match(/^C/i));document.getElementById('winsBox').innerHTML=wn.length?wn.map(w=>`<div class="decision-item"><div class="decision-icon" style="background:var(--green)">✓</div><div><div class="decision-text">${V(w['Descrição']||w['Descricao']||'')}</div><div class="decision-meta"><span>📅 ${fDate(w['Data Abertura']||w['Prazo / Data']||'')}</span><span>📍 ${V(w['Projeto Relacionado']||'')}</span><span>👤 ${V(w['Responsável']||w['Responsavel']||'')}</span></div></div></div>`).join(''):'<p style="color:var(--text-light);font-size:12px">Nenhuma conquista registrada</p>'}
