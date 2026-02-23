@@ -232,7 +232,7 @@ if(fri>=0&&fpi>=0&&fri>fpi){var dL=((fpi+1)/18*100).toFixed(2);var dW=((fri-fpi)
 // Deviation label position: after the rightmost bar element
 var rightEdge=fri>=0&&fri>fpi?((fri+1)/18*100+0.5):((rE+1)/18*100+0.5);
 var devHtml='';
-if(dev.txt)devHtml='<div style="position:absolute;top:2px;left:'+rightEdge.toFixed(1)+'%;font-size:9px;font-weight:700;white-space:nowrap" class="gantt-deviation '+dev.cls+'">'+dev.txt+'</div>';
+if(dev.txt&&dev.cls!=='ontime'){var rightEdge=fri>=0&&fri>fpi?((fri+1)/18*100+0.5):((rE+1)/18*100+0.5);devHtml='<div style="position:absolute;top:2px;left:'+rightEdge.toFixed(1)+'%;font-size:9px;font-weight:700;white-space:nowrap" class="gantt-deviation '+dev.cls+'">'+dev.txt+'</div>'};
 h+=`<div class="gantt-row" onclick="togglePhases('${id}')"><div class="gantt-row-label"><div class="gantt-expand-btn" id="btn-${id}">+</div><div class="gantt-row-info"><div class="gantt-row-name" title="${nm}">${nm}</div><div class="gantt-row-area">${ar}</div></div><div class="gantt-row-status"><span class="status-pill ${st}" style="font-size:9px">${sN(st)}</span></div></div><div class="gantt-bars" style="overflow:visible">`;
 for(let i=0;i<18;i++)h+=`<div class="gantt-grid-line" style="left:${(i/18*100).toFixed(2)}%"></div>`;
 h+='<div class="gantt-baseline" style="left:'+bL+'%;width:'+bW+'%"></div>';
