@@ -40,6 +40,8 @@
 .budget-bars{display:flex;flex-direction:column;gap:12px}.budget-item label{display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:4px}.budget-item label strong{color:var(--navy)}.budget-track{height:8px;background:var(--bg-subtle);border-radius:4px;overflow:hidden}.budget-fill{height:100%;border-radius:4px;transition:width 1s ease}.budget-fill.ok{background:linear-gradient(90deg,var(--navy),var(--navy-light))}.budget-fill.warn{background:linear-gradient(90deg,var(--yellow),#FBBF24)}
 .decision-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--bg-subtle);cursor:pointer;transition:background .15s}.decision-item:hover{background:rgba(0,0,0,.015)}.decision-item:last-child{border-bottom:none}.decision-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;flex-shrink:0;margin-top:1px;font-weight:700}.decision-text{font-size:12px;line-height:1.4}.decision-meta{font-size:10px;color:var(--text-secondary);margin-top:2px}.decision-meta span{margin-right:12px}
 .story-section{padding:24px 0}.story-card{background:var(--bg-card);border-radius:var(--radius);padding:24px;margin-bottom:16px;box-shadow:var(--shadow-sm);border-left:4px solid var(--navy)}.story-card.highlight{border-left-color:var(--coral)}.story-card.success{border-left-color:var(--green)}.story-card.warning{border-left-color:var(--yellow)}.story-card h3{font-family:'DM Serif Display',serif;font-size:16px;color:var(--navy);margin-bottom:8px}.story-card p,.story-card li{font-size:13px;color:var(--text-secondary);line-height:1.6}.story-card ul{padding-left:20px;margin-top:6px}.story-card li{margin-bottom:4px}
+.comm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:16px}.comm-card{background:var(--bg-card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);border:1px solid rgba(0,0,0,.04);position:relative;transition:all .25s}.comm-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}.comm-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}.comm-card-title{font-family:'DM Serif Display',serif;font-size:15px;color:var(--navy);line-height:1.3}.comm-freq{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:9px;font-weight:600;white-space:nowrap}.comm-freq.diario{background:#DBEAFE;color:#1D4ED8}.comm-freq.semanal{background:#D1FAE5;color:#047857}.comm-freq.quinzenal{background:#FEF3C7;color:#B45309}.comm-freq.mensal{background:#EDE9FE;color:#6D28D9}.comm-freq.outro{background:var(--bg-subtle);color:var(--text-secondary)}.comm-detail{display:flex;flex-direction:column;gap:8px}.comm-row{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text-secondary)}.comm-row-icon{flex-shrink:0;width:16px;text-align:center;font-size:11px}.comm-row-text{line-height:1.4}.comm-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:600;position:absolute;top:12px;right:12px}.comm-status.ativo{background:var(--green-bg);color:var(--green)}.comm-status.planejado{background:var(--blue-bg);color:var(--blue)}.comm-status.suspenso{background:var(--red-bg);color:var(--red)}.comm-status::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.comm-summary{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}.comm-kpi{background:var(--bg-card);border-radius:var(--radius);padding:14px 20px;box-shadow:var(--shadow-sm);border:1px solid rgba(0,0,0,.04);flex:1;min-width:120px;text-align:center}.comm-kpi-value{font-family:'DM Serif Display',serif;font-size:22px;color:var(--navy)}.comm-kpi-label{font-size:10px;color:var(--text-secondary);margin-top:2px}
 .tab-content{display:none;animation:fadeIn .3s ease}.tab-content.active{display:block}@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .toast{position:fixed;top:16px;right:16px;color:white;padding:10px 20px;border-radius:8px;font-size:12px;font-weight:600;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.2);animation:slideIn .3s ease,fadeOut .5s ease 2.5s forwards}@keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes fadeOut{to{opacity:0;transform:translateY(-10px)}}
 .progress-section{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
@@ -69,6 +71,7 @@
   <button class="nav-tab" onclick="switchTab(this,'people')">Governança &amp; Pessoas</button>
   <button class="nav-tab" onclick="switchTab(this,'budget')">Financeiro</button>
   <button class="nav-tab" onclick="switchTab(this,'board')">Resumo Executivo</button>
+  <button class="nav-tab" onclick="switchTab(this,'comms')">Comunicação</button>
 </div>
 <div class="main">
 
@@ -93,7 +96,7 @@
 
   <!-- TAB: GOVERNANÇA -->
   <div class="tab-content" id="tab-people">
-    <div class="section-header"><h2>Organograma do Programa</h2><div class="line"></div></div>
+    <div class="section-header"><h2>Organograma do Programa</h2><div class="line"></div><select id="orgProjFilter" onchange="renderOrg()" style="padding:4px 10px;border:1px solid var(--bg-subtle);border-radius:6px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--navy);cursor:pointer"><option value="">Todos os Projetos</option></select></div>
     <div class="card" style="margin-bottom:20px"><div class="card-body" style="padding:24px 20px"><div class="org-chart" id="orgChart"></div></div></div>
     <div class="section-header"><h2>Matriz RACI</h2><div class="line"></div></div>
     <div class="card" style="margin-bottom:20px"><div class="card-body" style="padding:12px 20px"><div class="raci-wrapper" id="raciMatrix"></div></div></div>
@@ -115,6 +118,12 @@
   <!-- TAB: BOARD REVIEW -->
   <div class="tab-content" id="tab-board">
     <div class="story-section" id="boardStory"></div>
+  </div>
+
+  <!-- TAB: COMUNICAÇÃO -->
+  <div class="tab-content" id="tab-comms" style="display:none">
+    <div class="section-header"><h2>Plano de Comunicação do Programa</h2><div class="line"></div><div class="count" id="commsCount">0 eventos</div></div>
+    <div id="commsContent"></div>
   </div>
 
 </div>
@@ -162,6 +171,7 @@ function loadData(S){
   D.organograma=(S['Organograma']||[]).filter(r=>V(r['Nome']||'').length>2&&!V(r['Nível']||r['Nivel']||'').toLowerCase().includes('sponsor /'));
   D.raci=(S['RACI']||[]).filter(r=>V(r['Atividade']||'').length>3&&!V(r['Atividade']||'').toLowerCase().includes('nome da'));
   D.capacitacao=(S['Capacitação']||S['Capacitacao']||[]).filter(r=>V(r['Indicador']||'').length>3);
+  D.comunicacao=(S['Comunicação']||S['Comunicacao']||[]).filter(r=>V(r['Evento']||'').length>3&&!V(r['Evento']||'').toLowerCase().includes('nome da'));
   const bR=S['Budget']||[];
   // New structure: Categoria, Fornecedor, ID Projeto, Orçado (R$), Jul/2025, Ago/2025, ...
   // Parse by column position for encoding safety
@@ -174,7 +184,7 @@ function buildFilter(){const sel=document.getElementById('projFilter');sel.inner
 function applyFilter(){filterProj=document.getElementById('projFilter').value;renderAll()}
 function fp(list,key){return filterProj?list.filter(r=>V(r[key||'ID Projeto']||r['ID']||r['Projeto Relacionado']||'')==filterProj):list}
 
-function renderAll(){renderHeader();renderKPIs();renderGantt();renderWins();renderModules();renderRisks();renderDecisions();renderOrg();renderRaci();renderTraining();renderBudget();renderBoard()}
+function renderAll(){renderHeader();renderKPIs();renderGantt();renderWins();renderModules();renderRisks();renderDecisions();renderOrg();renderRaci();renderTraining();renderBudget();renderComms();renderBoard()}
 
 function renderHeader(){const p=D.programa;if(p['Nome do Programa'])document.getElementById('hTitle').textContent=p['Nome do Programa'];if(p['Subtítulo']||p['Subtitulo'])document.getElementById('hSubtitle').textContent=V(p['Subtítulo']||p['Subtitulo']);if(p['Data de Atualização'])document.getElementById('hDate').textContent=p['Data de Atualização']}
 
@@ -254,9 +264,23 @@ function renderModules(){var el=document.getElementById('modCount');if(!el)retur
 function renderRisks(){const ri=D.riscos.filter(r=>V(r['Tipo']).toLowerCase().includes('risco')&&V(r['ID']||'').match(/^R\d/i)),im=D.riscos.filter(r=>V(r['Tipo']).toLowerCase().includes('imped')&&V(r['ID']||'').match(/^I\d/i));document.getElementById('riskCount').textContent=ri.length+' riscos';document.getElementById('impCount').textContent=im.length+' impedimentos';const rH=items=>items.map(r=>{const sv=svC(V(r['Severidade'])),ip=svC(V(r['Impacto'])),st=V(r['Status']||'');var prev=fDate(r['Previsão Conclusão']||r['Previsao Conclusao']||'');return`<div class="risk-row"><div class="risk-severity ${sv}"></div><div><div class="risk-desc"><strong>${V(r['Descrição']||r['Descricao']||'')}</strong></div><div class="risk-project">${V(r['Projeto Relacionado']||'')} · ${V(r['Ação de Mitigação']||r['Acao de Mitigacao']||'')}</div>${prev&&prev.length>4?'<div style="font-size:10px;color:var(--text-secondary);margin-top:2px">🎯 Previsão: '+prev+'</div>':''}</div><div class="risk-impact ${ip}">${V(r['Impacto']||'')}</div><span class="status-pill ${st.toLowerCase().includes('bloq')?'critical':st.toLowerCase().includes('aberto')?'attention':'on-track'}" style="font-size:9px">${st}</span></div>`}).join('');document.getElementById('risksBox').innerHTML=rH(ri)||'<p style="color:var(--text-light);font-size:12px">Nenhum risco</p>';document.getElementById('impBox').innerHTML=rH(im)||'<p style="color:var(--text-light);font-size:12px">Nenhum impedimento</p>'}
 
 function renderOrg(){cI=0;var compColors={};var compCI=0;function getCompColor(emp){if(!emp)return nxC();if(!compColors[emp]){compColors[emp]=['#1B2A4A','#E8533F','#10B981','#3B82F6','#F59E0B','#8B5CF6','#EC4899','#14B8A6','#F97316','#6366F1'][compCI%10];compCI++}return compColors[emp]}
-const org=D.organograma,lv=k=>org.filter(r=>V(r['Nível']||r['Nivel']||'').toLowerCase().includes(k)),pH=p=>`<div class="org-person"><div class="org-avatar" style="background:${getCompColor(V(p['Empresa']||''))}">${ini(V(p['Nome']))}</div><div class="org-person-info"><div class="org-person-name">${V(p['Nome'])}</div><div class="org-person-title">${V(p['Cargo / Título']||p['Cargo / Titulo']||p['Papel']||'')}</div></div></div>`,cH=(role,cls,ppl,xs)=>{if(!ppl.length)return'';return`<div class="org-card ${cls}" style="${xs||''}"><div class="org-role">${role}</div><div class="org-people-list">${ppl.map(pH).join('')}</div></div>`};const team=lv('time').filter(p=>V(p['Nome'])).sort(function(a,b){var ea=V(a['Empresa']||''),eb=V(b['Empresa']||'');if(ea!==eb)return ea.localeCompare(eb,'pt-BR');return V(a['Nome']).localeCompare(V(b['Nome']),'pt-BR')}),byA={};team.forEach(p=>{const a=V(p['Área']||p['Area']||'Geral');if(!byA[a])byA[a]=[];byA[a].push(p)});const tH=Object.keys(byA).sort().map(a=>{var ms=byA[a];return`<div class="org-area-card"><div class="org-area-label">${a}</div><div class="org-area-members">${ms.map(m=>{var emp=V(m['Empresa']||'');var papel=V(m['Papel']||'');var roleText=emp&&papel?emp+' — '+papel:emp||papel||'';return`<div class="org-area-member"><div class="org-area-member-dot" style="background:${getCompColor(emp)}"></div><div><div class="org-area-member-name">${V(m['Nome'])}</div><div class="org-area-member-role">${roleText}</div></div></div>`}).join('')}</div></div>`}).join('');const gestao=org.filter(r=>{const n=V(r['Nível']||r['Nivel']||'').toLowerCase();return n.includes('gestão')||n.includes('gestao')}),arq=org.filter(r=>{const n=V(r['Nível']||r['Nivel']||'').toLowerCase();return n.includes('líder')||n.includes('lider')||n.includes('arq')}),dec=org.filter(r=>{const n=V(r['Nível']||r['Nivel']||'').toLowerCase();return n.includes('decisor')||n.includes('go-nogo')});
+// Project filter
+var sel=document.getElementById('orgProjFilter'),curVal=sel?sel.value:'';
+var projIds={};D.organograma.forEach(function(r){var p=V(r['Projeto']||'');p.split(',').forEach(function(x){x=x.trim();if(x&&x!=='Todos'&&x.match(/^P\d/i))projIds[x]=1})});
+if(sel){var prevVal=sel.value;sel.innerHTML='<option value="">Todos os Projetos</option>';Object.keys(projIds).sort().forEach(function(pid){var pn=projName(pid);sel.innerHTML+='<option value="'+pid+'"'+(prevVal===pid?' selected':'')+'>'+pid+' — '+pn+'</option>'});curVal=sel.value}
+function matchProj(r){if(!curVal)return true;var p=V(r['Projeto']||'');if(!p)return false;if(p.toLowerCase().includes('todos'))return true;return p.split(',').map(function(x){return x.trim()}).indexOf(curVal)>=0}
+var org=D.organograma.filter(matchProj);
+var lv=function(k){return org.filter(function(r){return V(r['Nível']||r['Nivel']||'').toLowerCase().includes(k)})};
+var pH=function(p){return'<div class="org-person"><div class="org-avatar" style="background:'+getCompColor(V(p['Empresa']||''))+'">'+ini(V(p['Nome']))+'</div><div class="org-person-info"><div class="org-person-name">'+V(p['Nome'])+'</div><div class="org-person-title">'+V(p['Cargo / Título']||p['Cargo / Titulo']||p['Papel']||'')+'</div></div></div>'};
+var cH=function(role,cls,ppl,xs){if(!ppl.length)return'';return'<div class="org-card '+cls+'" style="'+(xs||'')+'"><div class="org-role">'+role+'</div><div class="org-people-list">'+ppl.map(pH).join('')+'</div></div>'};
+var team=lv('time').filter(function(p){return V(p['Nome'])}).sort(function(a,b){var ea=V(a['Empresa']||''),eb=V(b['Empresa']||'');if(ea!==eb)return ea.localeCompare(eb,'pt-BR');return V(a['Nome']).localeCompare(V(b['Nome']),'pt-BR')});
+var byA={};team.forEach(function(p){var a=V(p['Área']||p['Area']||'Geral');if(!byA[a])byA[a]=[];byA[a].push(p)});
+var tH=Object.keys(byA).sort().map(function(a){var ms=byA[a];return'<div class="org-area-card"><div class="org-area-label">'+a+'</div><div class="org-area-members">'+ms.map(function(m){var emp=V(m['Empresa']||'');var papel=V(m['Papel']||'');var roleText=emp&&papel?emp+' — '+papel:emp||papel||'';return'<div class="org-area-member"><div class="org-area-member-dot" style="background:'+getCompColor(emp)+'"></div><div><div class="org-area-member-name">'+V(m['Nome'])+'</div><div class="org-area-member-role">'+roleText+'</div></div></div>'}).join('')+'</div></div>'}).join('');
+var gestao=org.filter(function(r){var n=V(r['Nível']||r['Nivel']||'').toLowerCase();return n.includes('gestão')||n.includes('gestao')});
+var arq=org.filter(function(r){var n=V(r['Nível']||r['Nivel']||'').toLowerCase();return n.includes('líder')||n.includes('lider')||n.includes('arq')});
+var dec=org.filter(function(r){var n=V(r['Nível']||r['Nivel']||'').toLowerCase();return n.includes('decisor')||n.includes('go-nogo')});
 var legendHtml='';if(Object.keys(compColors).length){legendHtml='<div style="display:flex;gap:12px;justify-content:center;margin-top:12px;flex-wrap:wrap">';Object.keys(compColors).sort().forEach(function(e){legendHtml+='<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary)"><span style="width:8px;height:8px;border-radius:50%;background:'+compColors[e]+';display:inline-block"></span> '+e+'</span>'});legendHtml+='</div>'}
-document.getElementById('orgChart').innerHTML=cH('Sponsor','sponsor',lv('sponsor'))+(lv('sponsor').length?'<div class="org-connector-v"></div>':'')+cH('Comitê Executivo','comite',lv('comit'),'min-width:300px')+(lv('comit').length?'<div class="org-connector-v"></div>':'')+`<div class="org-level" style="gap:20px">${cH('Gestão do Programa','gestao',gestao)}${cH('Líder Arquitetura / Infra','gestao',arq)}${cH('Decisores Go-NoGo','decisor',dec)}</div>`+(Object.keys(byA).length?`<div class="org-connector-v"></div><div class="org-team-box"><div class="org-team-title">Time do Projeto</div><div class="org-area-grid">${tH}</div>${legendHtml}</div>`:'')}
+document.getElementById('orgChart').innerHTML=cH('Sponsor','sponsor',lv('sponsor'))+(lv('sponsor').length?'<div class="org-connector-v"></div>':'')+cH('Comitê Executivo','comite',lv('comit'),'min-width:300px')+(lv('comit').length?'<div class="org-connector-v"></div>':'')+('<div class="org-level" style="gap:20px">'+cH('Gestão do Programa','gestao',gestao)+cH('Líder Arquitetura / Infra','gestao',arq)+cH('Decisores Go-NoGo','decisor',dec)+'</div>')+(Object.keys(byA).length?'<div class="org-connector-v"></div><div class="org-team-box"><div class="org-team-title">Time do Projeto</div><div class="org-area-grid">'+tH+'</div>'+legendHtml+'</div>':'')}
 
 function renderRaci(){const rows=D.raci;if(!rows.length)return;const cols=Object.keys(rows[0]).filter(k=>k!=='Atividade'&&!k.startsWith('__'));let h='<table class="raci-table"><thead><tr><th>Atividade</th>';cols.forEach(c=>h+=`<th>${c.replace(/\n/g,'<br>')}</th>`);h+='</tr></thead><tbody>';rows.forEach(r=>{h+=`<tr><td>${V(r['Atividade'])}</td>`;cols.forEach(c=>{const x=V(r[c]).toUpperCase();const cl=x==='R'?'raci-r':x==='A'?'raci-a':x==='C'?'raci-c':x==='I'?'raci-i':'';h+=`<td>${cl?`<span class="raci-cell ${cl}">${x}</span>`:''}</td>`});h+='</tr>'});h+='</tbody></table><div class="raci-legend"><div class="raci-legend-item"><span class="raci-cell raci-r" style="width:20px;height:20px;font-size:9px">R</span> Responsável</div><div class="raci-legend-item"><span class="raci-cell raci-a" style="width:20px;height:20px;font-size:9px">A</span> Aprovador</div><div class="raci-legend-item"><span class="raci-cell raci-c" style="width:20px;height:20px;font-size:9px">C</span> Consultado</div><div class="raci-legend-item"><span class="raci-cell raci-i" style="width:20px;height:20px;font-size:9px">I</span> Informado</div></div>';document.getElementById('raciMatrix').innerHTML=h}
 
@@ -319,20 +343,62 @@ function renderBudgetDetail(){
   document.getElementById('budgetDetail').innerHTML=h||'<p style="color:var(--text-light);font-size:12px">Sem dados</p>'}
 
 
+function renderComms(){
+  var comms=D.comunicacao||[];
+  document.getElementById('commsCount').textContent=comms.length+' eventos';
+  if(!comms.length){document.getElementById('commsContent').innerHTML='<p style="color:var(--text-light);font-size:12px">Sem eventos cadastrados</p>';return}
+  var ativos=comms.filter(r=>V(r['Status']||'').toLowerCase().includes('ativo')).length;
+  var planejados=comms.filter(r=>V(r['Status']||'').toLowerCase().includes('planej')).length;
+  var freqs={};comms.forEach(function(r){var f=V(r['Frequência']||r['Frequencia']||'').toLowerCase();if(f)freqs[f]=(freqs[f]||0)+1});
+  var h='<div class="comm-summary">';
+  h+='<div class="comm-kpi"><div class="comm-kpi-value">'+comms.length+'</div><div class="comm-kpi-label">Total de Eventos</div></div>';
+  h+='<div class="comm-kpi"><div class="comm-kpi-value">'+ativos+'</div><div class="comm-kpi-label">Ativos</div></div>';
+  h+='<div class="comm-kpi"><div class="comm-kpi-value">'+planejados+'</div><div class="comm-kpi-label">Planejados</div></div>';
+  var canais={};comms.forEach(function(r){var c=V(r['Canal']||'');if(c)canais[c]=1});
+  h+='<div class="comm-kpi"><div class="comm-kpi-value">'+Object.keys(canais).length+'</div><div class="comm-kpi-label">Canais</div></div>';
+  h+='</div>';
+  h+='<div class="comm-grid">';
+  comms.forEach(function(c){
+    var freq=V(c['Frequência']||c['Frequencia']||'');
+    var fl=freq.toLowerCase();
+    var fcls=fl.includes('diár')||fl.includes('diar')?'diario':fl.includes('seman')?'semanal':fl.includes('quinz')?'quinzenal':fl.includes('mens')?'mensal':'outro';
+    var st=V(c['Status']||'');
+    var scls=st.toLowerCase().includes('ativo')?'ativo':st.toLowerCase().includes('planej')?'planejado':st.toLowerCase().includes('susp')?'suspenso':'ativo';
+    h+='<div class="comm-card">';
+    h+='<div class="comm-status '+scls+'">'+st+'</div>';
+    h+='<div class="comm-card-header"><div class="comm-card-title">'+V(c['Evento']||'')+'</div></div>';
+    h+='<div class="comm-detail">';
+    h+='<div class="comm-row"><div class="comm-row-icon">🔄</div><div class="comm-row-text"><strong>Frequência:</strong> <span class="comm-freq '+fcls+'">'+freq+'</span></div></div>';
+    var pub=V(c['Público-Alvo']||c['Publico-Alvo']||c['Público Alvo']||c['Publico Alvo']||'');
+    if(pub)h+='<div class="comm-row"><div class="comm-row-icon">👥</div><div class="comm-row-text"><strong>Público:</strong> '+pub+'</div></div>';
+    var obj=V(c['Objetivo']||'');
+    if(obj)h+='<div class="comm-row"><div class="comm-row-icon">🎯</div><div class="comm-row-text"><strong>Objetivo:</strong> '+obj+'</div></div>';
+    var resp=V(c['Responsável']||c['Responsavel']||'');
+    if(resp)h+='<div class="comm-row"><div class="comm-row-icon">👤</div><div class="comm-row-text"><strong>Responsável:</strong> '+resp+'</div></div>';
+    var canal=V(c['Canal']||'');
+    if(canal)h+='<div class="comm-row"><div class="comm-row-icon">📡</div><div class="comm-row-text"><strong>Canal:</strong> '+canal+'</div></div>';
+    h+='</div></div>';
+  });
+  h+='</div>';
+  document.getElementById('commsContent').innerHTML=h;
+}
 function renderBoard(){
-  const pr=D.projetos,ri=D.riscos.filter(r=>V(r['Tipo']).toLowerCase().includes('risco')),im=D.riscos.filter(r=>V(r['Tipo']).toLowerCase().includes('imped')),dc=D.decisoes.filter(r=>V(r['Tipo']).toLowerCase().includes('decis')),wn=D.decisoes.filter(r=>V(r['ID']||'').match(/^C/i));
+  const pr=D.projetos,ri=D.riscos.filter(r=>V(r['Tipo']).toLowerCase().includes('risco')&&V(r['ID']||'').match(/^R\d/i)),im=D.riscos.filter(r=>V(r['Tipo']).toLowerCase().includes('imped')&&V(r['ID']||'').match(/^I\d/i)),dc=D.decisoes.filter(r=>V(r['Tipo']).toLowerCase().includes('decis')&&V(r['ID']||'').match(/^D\d/i)),wn=D.decisoes.filter(r=>V(r['ID']||'').match(/^C/i));
   const tp=pr.length,cp=pr.filter(r=>sC(V(r['Status']))=='completed').length;
   let avg=tp?pr.reduce((s,r)=>{let v=P(r['% Avanço']||r['% Avanco']||'0');if(v>0&&v<=1)v=v*100;return s+v},0)/tp:0;avg=Math.round(avg);
   var bTotOrc=0,bTotRea=0;D.budgetRows.forEach(function(r){bTotOrc+=r.orc;bTotRea+=r.rea});
-  const hrisk=ri.filter(r=>svC(V(r['Severidade']))=='high');
   let h=`<div class="story-card highlight"><h3>📊 Status do Programa</h3><p>${tp} projetos em andamento, ${cp} concluído(s). Avanço geral: <strong>${avg}%</strong>. Orçamento utilizado: <strong>${bTotOrc>0?Math.round(bTotRea/bTotOrc*100):0}%</strong> (${fK(bTotRea)} de ${fK(bTotOrc)}).</p></div>`;
+  // Cronograma inline
+  h+=`<div class="story-card" style="border-left-color:var(--blue);padding:16px"><h3>📅 Cronograma dos Projetos</h3><div class="gantt-wrapper" style="margin-top:12px"><div class="gantt-container" id="boardGanttInner"></div></div></div>`;
   if(wn.length)h+=`<div class="story-card success"><h3>🏆 Principais Conquistas</h3><ul>${wn.map(w=>`<li>${V(w['Descrição']||w['Descricao']||'')}</li>`).join('')}</ul></div>`;
-  // Próximos marcos - ordenados por Fim Planejado
   const upcoming=D.etapas.filter(e=>sC(V(e['Status']))!='completed').sort(function(a,b){var da=pM(V(a['Fim Planejado']||a['Fim']||'')),db=pM(V(b['Fim Planejado']||b['Fim']||''));if(!da)return 1;if(!db)return-1;return da.localeCompare(db)}).slice(0,5);
-  if(upcoming.length)h+=`<div class="story-card"><h3>🎯 Próximos Marcos</h3><ul>${upcoming.map(e=>`<li><strong>${V(e['Projeto'])}</strong> — ${V(e['Etapa'])} (${V(e['Fim Planejado']||e['Fim']||'')})</li>`).join('')}</ul></div>`;
+  if(upcoming.length)h+=`<div class="story-card"><h3>🎯 Próximos Marcos</h3><ul>${upcoming.map(e=>`<li><strong>${V(e['Projeto'])}</strong> — ${V(e['Etapa'])} (${fDate(e['Fim Planejado']||e['Fim']||'')})</li>`).join('')}</ul></div>`;
   if(ri.length)h+=`<div class="story-card warning"><h3>⚠️ Riscos (${ri.length})</h3><ul>${ri.map(r=>`<li><span style="color:${svC(V(r['Severidade']))=='high'?'var(--red)':'var(--yellow)'}">●</span> ${V(r['Descrição']||r['Descricao']||'')} — <em>${V(r['Status']||'')}</em></li>`).join('')}</ul></div>`;
-  if(dc.length)h+=`<div class="story-card highlight"><h3>🔔 Decisões Necessárias (${dc.length})</h3><ul>${dc.map(d=>`<li>${V(d['Descrição']||d['Descricao']||'')} — Prazo: <strong>${V(d['Data Abertura']||d['Prazo / Data']||'')}</strong></li>`).join('')}</ul></div>`;
-  document.getElementById('boardStory').innerHTML=h}
+  if(dc.length)h+=`<div class="story-card highlight"><h3>🔔 Decisões Necessárias (${dc.length})</h3><ul>${dc.map(d=>`<li>${V(d['Descrição']||d['Descricao']||'')} — Prazo: <strong>${fDate(d['Data Abertura']||d['Prazo / Data']||'')}</strong></li>`).join('')}</ul></div>`;
+  document.getElementById('boardStory').innerHTML=h;
+  // Render gantt inside board
+  var bg=document.getElementById('boardGanttInner');if(bg)bg.innerHTML=document.getElementById('ganttChart').innerHTML;
+}
 
 
 function loadDefaultData(){ loadData({
@@ -345,7 +411,8 @@ function loadDefaultData(){ loadData({
     'RACI':[{Atividade:'Definição de escopo',Sponsor:'A','Comitê Exec.':'C','Ger. Programa':'R','Líder Arq.':'C','Decisores Go-NoGo':'I','Key Users':'C'},{Atividade:'Configuração dos módulos',Sponsor:'I','Comitê Exec.':'I','Ger. Programa':'A','Líder Arq.':'C','Decisores Go-NoGo':'I','Key Users':'R'},{Atividade:'Homologação / Testes',Sponsor:'I','Comitê Exec.':'I','Ger. Programa':'A','Líder Arq.':'C','Decisores Go-NoGo':'C','Key Users':'R'},{Atividade:'Decisão de Go-NoGo',Sponsor:'A','Comitê Exec.':'C','Ger. Programa':'C','Líder Arq.':'I','Decisores Go-NoGo':'R','Key Users':'I'},{Atividade:'Gestão de mudanças',Sponsor:'C','Comitê Exec.':'A','Ger. Programa':'R','Líder Arq.':'I','Decisores Go-NoGo':'I','Key Users':'C'},{Atividade:'Treinamento de usuários',Sponsor:'I','Comitê Exec.':'I','Ger. Programa':'A','Líder Arq.':'C','Decisores Go-NoGo':'I','Key Users':'R'},{Atividade:'Integração com SAP',Sponsor:'I','Comitê Exec.':'C','Ger. Programa':'A','Líder Arq.':'R','Decisores Go-NoGo':'I','Key Users':'C'},{Atividade:'Go-Live e estabilização',Sponsor:'A','Comitê Exec.':'I','Ger. Programa':'R','Líder Arq.':'C','Decisores Go-NoGo':'C','Key Users':'C'},{Atividade:'Monitoramento de riscos',Sponsor:'I','Comitê Exec.':'A','Ger. Programa':'R','Líder Arq.':'C','Decisores Go-NoGo':'I','Key Users':'C'},{Atividade:'Aprovação de budget',Sponsor:'A','Comitê Exec.':'R','Ger. Programa':'C','Líder Arq.':'I','Decisores Go-NoGo':'I','Key Users':'I'}],
     'Capacitação':[{Indicador:'Key Users Capacitados',Realizado:8,Meta:9},{Indicador:'Usuários Finais Treinados',Realizado:67,Meta:150},{Indicador:'Sessões de Treinamento',Realizado:18,Meta:35},{Indicador:'Satisfação (NPS)',Realizado:78,Meta:100}],
     'Budget':[{Categoria:'Licenças Softexpert',Fornecedor:'SoftExpert','ID Projeto':'','Orçado (R$)':450000,'Jul/2025':35000,'Ago/2025':35000,'Set/2025':35000,'Out/2025':35000,'Nov/2025':35000,'Dez/2025':35000,'Jan/2026':35000,'Fev/2026':35000},{Categoria:'Consultoria & Implantação',Fornecedor:'SoftExpert','ID Projeto':'P01','Orçado (R$)':120000,'Jul/2025':15000,'Ago/2025':15000,'Set/2025':12000,'Out/2025':18000,'Nov/2025':15000,'Dez/2025':10000,'Jan/2026':10000,'Fev/2026':8000},{Categoria:'Consultoria & Implantação',Fornecedor:'SoftExpert','ID Projeto':'P03','Orçado (R$)':80000,'Set/2025':5000,'Out/2025':8000,'Nov/2025':10000,'Dez/2025':10000,'Jan/2026':8000,'Fev/2026':7000},{Categoria:'Consultoria & Implantação',Fornecedor:'Deloitte','ID Projeto':'P02','Orçado (R$)':150000,'Jul/2025':20000,'Ago/2025':25000,'Set/2025':18000,'Out/2025':22000,'Nov/2025':20000,'Dez/2025':15000,'Jan/2026':12000,'Fev/2026':10000},{Categoria:'Treinamentos',Fornecedor:'SoftExpert','ID Projeto':'P01','Orçado (R$)':60000,'Jul/2025':5000,'Ago/2025':8000,'Set/2025':7000,'Out/2025':6000,'Nov/2025':5000,'Dez/2025':4000,'Jan/2026':3000,'Fev/2026':2000},{Categoria:'Treinamentos',Fornecedor:'SoftExpert','ID Projeto':'P02','Orçado (R$)':60000,'Jul/2025':5000,'Ago/2025':7000,'Set/2025':5000,'Out/2025':6000,'Nov/2025':8000,'Dez/2025':6000,'Jan/2026':5000,'Fev/2026':3000},{Categoria:'Infraestrutura & Integração',Fornecedor:'Plano&Plano (interno)','ID Projeto':'P04','Orçado (R$)':100000,'Jul/2025':10000,'Ago/2025':12000,'Set/2025':15000,'Out/2025':18000,'Nov/2025':15000,'Dez/2025':15000,'Jan/2026':10000,'Fev/2026':8000},{Categoria:'Infraestrutura & Integração',Fornecedor:'AWS','ID Projeto':'','Orçado (R$)':80000,'Jul/2025':5000,'Ago/2025':5000,'Set/2025':5000,'Out/2025':8000,'Nov/2025':8000,'Dez/2025':8000,'Jan/2026':8000,'Fev/2026':8000},{Categoria:'Contingência',Fornecedor:'','ID Projeto':'','Orçado (R$)':100000,'Ago/2025':3000,'Out/2025':2000,'Nov/2025':10000,'Dez/2025':5000,'Jan/2026':5000,'Fev/2026':5000}],
-    'Histórico':[{Data:'03/02/2026','% Avanço Geral':3.2},{Data:'04/02/2026','% Avanço Geral':3.2},{Data:'05/02/2026','% Avanço Geral':3.5},{Data:'06/02/2026','% Avanço Geral':3.7},{Data:'07/02/2026','% Avanço Geral':3.7},{Data:'10/02/2026','% Avanço Geral':4.0},{Data:'11/02/2026','% Avanço Geral':4.0},{Data:'12/02/2026','% Avanço Geral':4.2},{Data:'13/02/2026','% Avanço Geral':4.5}]
+    'Histórico':[{Data:'03/02/2026','% Avanço Geral':3.2},{Data:'04/02/2026','% Avanço Geral':3.2},{Data:'05/02/2026','% Avanço Geral':3.5},{Data:'06/02/2026','% Avanço Geral':3.7},{Data:'07/02/2026','% Avanço Geral':3.7},{Data:'10/02/2026','% Avanço Geral':4.0},{Data:'11/02/2026','% Avanço Geral':4.0},{Data:'12/02/2026','% Avanço Geral':4.2},{Data:'13/02/2026','% Avanço Geral':4.5}],
+    'Comunicação':[{Evento:'Daily do Projeto',Frequência:'Diário','Público-Alvo':'Time do Projeto',Objetivo:'Alinhamento diário de atividades e bloqueios',Responsável:'Lucas Fernandes',Canal:'Teams',Status:'Ativo'},{Evento:'Weekly Status Report',Frequência:'Semanal','Público-Alvo':'Gestão do Programa',Objetivo:'Acompanhamento de progresso, riscos e próximos passos',Responsável:'Lucas Fernandes',Canal:'Teams',Status:'Ativo'},{Evento:'Comitê Executivo',Frequência:'Quinzenal','Público-Alvo':'Comitê Executivo + Sponsor',Objetivo:'Decisões estratégicas, aprovações e Go/No-Go',Responsável:'Fabio Jonas',Canal:'Presencial + Teams',Status:'Ativo'},{Evento:'Newsletter do Programa',Frequência:'Mensal','Público-Alvo':'Toda a organização',Objetivo:'Comunicar avanços, conquistas e próximos marcos',Responsável:'Lucas Fernandes',Canal:'E-mail + SharePoint',Status:'Planejado'},{Evento:'Treinamento Key Users',Frequência:'Sob demanda','Público-Alvo':'Key Users por módulo',Objetivo:'Capacitação e handover de funcionalidades',Responsável:'Claudio Ferreira',Canal:'Presencial',Status:'Ativo'},{Evento:'Reunião de Riscos',Frequência:'Semanal','Público-Alvo':'Gestão do Programa + Líderes',Objetivo:'Revisão de riscos ativos e planos de mitigação',Responsável:'Fabio Jonas',Canal:'Teams',Status:'Ativo'},{Evento:'Board Review',Frequência:'Mensal','Público-Alvo':'Sponsor + Comitê Executivo',Objetivo:'Apresentação executiva de resultados e roadmap',Responsável:'Lucas Fernandes',Canal:'Presencial',Status:'Ativo'},{Evento:'Retrospectiva de Sprint',Frequência:'Quinzenal','Público-Alvo':'Time do Projeto',Objetivo:'Melhoria contínua do processo',Responsável:'Fernando Hideo Fujii',Canal:'Teams',Status:'Planejado'}]
   })
 }
 
