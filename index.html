@@ -129,8 +129,10 @@
 </div>
 <script>
 // === NAV & UI ===
-function switchTab(b,t){document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');b.classList.add('active')}
+function switchTab(b,t){document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');b.classList.add('active');history.replaceState(null,null,'#'+t)}
 function goTab(t){const tabs=document.querySelectorAll('.nav-tabs > .nav-tab');var map={risks:1,budget:3,governance:2,board:4};if(map[t]!==undefined&&tabs[map[t]])tabs[map[t]].click()}
+function applyHash(){var h=location.hash.replace('#','');if(!h)return;var valid=['overview','risks','people','budget','board','comms'];if(valid.indexOf(h)===-1)return;var tabs=document.querySelectorAll('.nav-tabs > .nav-tab');var map={overview:0,risks:1,people:2,budget:3,board:4,comms:5};if(map[h]!==undefined&&tabs[map[h]])tabs[map[h]].click()}
+window.addEventListener('hashchange',applyHash);
 function toggleSection(id,hdr){const c=document.getElementById(id);const h=hdr.querySelector('h2');if(!c)return;if(c.style.display==='none'){c.style.display='';h.textContent=h.textContent.replace('▶','▼')}else{c.style.display='none';h.textContent=h.textContent.replace('▼','▶')}}
 
 // === CONSTANTS ===
@@ -184,7 +186,7 @@ function buildFilter(){const sel=document.getElementById('projFilter');sel.inner
 function applyFilter(){filterProj=document.getElementById('projFilter').value;renderAll()}
 function fp(list,key){return filterProj?list.filter(r=>V(r[key||'ID Projeto']||r['ID']||r['Projeto Relacionado']||'')==filterProj):list}
 
-function renderAll(){renderHeader();renderKPIs();renderGantt();renderWins();renderModules();renderRisks();renderDecisions();renderOrg();renderRaci();renderTraining();renderBudget();renderComms();renderBoard()}
+function renderAll(){renderHeader();renderKPIs();renderGantt();renderWins();renderModules();renderRisks();renderDecisions();renderOrg();renderRaci();renderTraining();renderBudget();renderComms();renderBoard();applyHash()}
 
 function renderHeader(){const p=D.programa;if(p['Nome do Programa'])document.getElementById('hTitle').textContent=p['Nome do Programa'];if(p['Subtítulo']||p['Subtitulo'])document.getElementById('hSubtitle').textContent=V(p['Subtítulo']||p['Subtitulo']);if(p['Data de Atualização'])document.getElementById('hDate').textContent=p['Data de Atualização']}
 
