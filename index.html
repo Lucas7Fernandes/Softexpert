@@ -108,7 +108,6 @@
   <div class="tab-content" id="tab-budget">
     <div class="section-header"><h2>Investimento do Programa</h2><div class="line"></div></div>
     <div class="kpi-grid" id="budgetKpis" style="grid-template-columns:repeat(3,1fr);gap:16px"></div>
-    <div id="budgetProgressBar" style="margin-bottom:20px"></div>
     <div class="progress-section">
       <div class="card"><div class="card-header"><h3>Distribuição por Categoria</h3></div><div class="card-body" id="budgetCatBox"></div></div>
       <div class="card"><div class="card-header"><h3>Evolução Mensal</h3></div><div class="card-body" id="budgetChart"></div></div>
@@ -314,21 +313,6 @@ function renderBudget(){
       +'<div class="kpi-value" style="font-size:26px;margin-top:4px">'+fK(sal)+'</div>'
       +'<div class="kpi-sub" style="margin-top:8px">'
         +'<span class="kpi-indicator '+salCls+'">'+pS+'% restante</span>'
-      +'</div>'
-    +'</div>';
-  // Overall progress bar
-  document.getElementById('budgetProgressBar').innerHTML=
-    '<div class="card" style="padding:16px 24px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-        +'<span style="font-size:12px;font-weight:600;color:var(--navy)">Consumo do Orçamento</span>'
-        +'<span style="font-size:12px;font-weight:700;color:var(--navy)">'+pU+'%</span>'
-      +'</div>'
-      +'<div style="height:10px;background:var(--bg-subtle);border-radius:6px;overflow:hidden;position:relative">'
-        +'<div style="height:100%;width:'+pU+'%;border-radius:6px;background:linear-gradient(90deg,var(--green),var(--navy-light));transition:width 1.2s ease"></div>'
-      +'</div>'
-      +'<div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--text-secondary)">'
-        +'<span>'+fK(totRea)+' utilizado</span>'
-        +'<span>'+fK(sal)+' disponível</span>'
       +'</div>'
     +'</div>';
   // Distribution by category
