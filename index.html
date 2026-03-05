@@ -46,7 +46,7 @@
 .toast{position:fixed;top:16px;right:16px;color:white;padding:10px 20px;border-radius:8px;font-size:12px;font-weight:600;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.2);animation:slideIn .3s ease,fadeOut .5s ease 2.5s forwards}@keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes fadeOut{to{opacity:0;transform:translateY(-10px)}}
 .progress-section{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
 @media(max-width:1024px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.progress-section{grid-template-columns:1fr}.header,.main{padding-left:24px;padding-right:24px}.nav-tabs{padding:0 24px}.gantt-row{grid-template-columns:200px 1fr}.gantt-header{grid-template-columns:200px 1fr}}
-@media(max-width:768px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.header-top{flex-direction:column;gap:12px;align-items:flex-start}.header,.main{padding:16px}.nav-tabs{padding:0 16px}.gantt-row,.gantt-header{grid-template-columns:160px 1fr}.org-level{flex-direction:column;align-items:center}}
+@media(max-width:768px){.kpi-grid{grid-template-columns:repeat(2,1fr)}#budgetKpis{grid-template-columns:1fr!important}.header-top{flex-direction:column;gap:12px;align-items:flex-start}.header,.main{padding:16px}.nav-tabs{padding:0 16px}.gantt-row,.gantt-header{grid-template-columns:160px 1fr}.org-level{flex-direction:column;align-items:center}}
 @media print{.nav-tabs{display:none}.card{break-inside:avoid}}
 </style>
 </head>
@@ -107,7 +107,8 @@
   <!-- TAB: FINANCEIRO -->
   <div class="tab-content" id="tab-budget">
     <div class="section-header"><h2>Investimento do Programa</h2><div class="line"></div></div>
-    <div class="kpi-grid" id="budgetKpis" style="grid-template-columns:repeat(4,1fr)"></div>
+    <div class="kpi-grid" id="budgetKpis" style="grid-template-columns:repeat(3,1fr);gap:16px"></div>
+    <div id="budgetProgressBar" style="margin-bottom:20px"></div>
     <div class="progress-section">
       <div class="card"><div class="card-header"><h3>Distribuição por Categoria</h3></div><div class="card-body" id="budgetCatBox"></div></div>
       <div class="card"><div class="card-header"><h3>Evolução Mensal</h3></div><div class="card-body" id="budgetChart"></div></div>
@@ -293,7 +294,43 @@ function renderBudget(){
   var pU=totOrc>0?Math.round(totRea/totOrc*100):0;
   var sal=totOrc-totRea;var pS=totOrc>0?Math.round(sal/totOrc*100):0;
   // KPIs
-  document.getElementById('budgetKpis').innerHTML='<div class="kpi-card accent-navy"><div class="kpi-label">Orçamento Total</div><div class="kpi-value" style="font-size:24px">'+fK(totOrc)+'</div></div><div class="kpi-card accent-green"><div class="kpi-label">Realizado</div><div class="kpi-value" style="font-size:24px">'+fK(totRea)+'</div><div class="kpi-sub">'+pU+'% do orçamento</div></div><div class="kpi-card accent-yellow"><div class="kpi-label">Comprometido</div><div class="kpi-value" style="font-size:24px">'+fK(totOrc-sal)+'</div></div><div class="kpi-card accent-coral"><div class="kpi-label">Saldo</div><div class="kpi-value" style="font-size:24px">'+fK(sal)+'</div><div class="kpi-sub">'+pS+'%'+(pS<20?' — <span class="down">Atenção</span>':'')+'</div></div>';
+  var usageCls=pU>85?'down':pU>60?'':'up';
+  var salCls=pS<20?'down':pS<40?'':'up';
+  document.getElementById('budgetKpis').innerHTML=
+    '<div class="kpi-card accent-navy" style="padding:20px 24px">'
+      +'<div class="kpi-label">Orçamento Total</div>'
+      +'<div class="kpi-value" style="font-size:26px;margin-top:4px">'+fK(totOrc)+'</div>'
+      +'<div class="kpi-sub" style="margin-top:8px;font-size:11px">Investimento previsto para o programa</div>'
+    +'</div>'
+    +'<div class="kpi-card accent-green" style="padding:20px 24px">'
+      +'<div class="kpi-label">Realizado</div>'
+      +'<div class="kpi-value" style="font-size:26px;margin-top:4px">'+fK(totRea)+'</div>'
+      +'<div class="kpi-sub" style="margin-top:8px">'
+        +'<span class="kpi-indicator '+usageCls+'">'+pU+'% utilizado</span>'
+      +'</div>'
+    +'</div>'
+    +'<div class="kpi-card accent-coral" style="padding:20px 24px">'
+      +'<div class="kpi-label">Saldo Disponível</div>'
+      +'<div class="kpi-value" style="font-size:26px;margin-top:4px">'+fK(sal)+'</div>'
+      +'<div class="kpi-sub" style="margin-top:8px">'
+        +'<span class="kpi-indicator '+salCls+'">'+pS+'% restante</span>'
+      +'</div>'
+    +'</div>';
+  // Overall progress bar
+  document.getElementById('budgetProgressBar').innerHTML=
+    '<div class="card" style="padding:16px 24px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+        +'<span style="font-size:12px;font-weight:600;color:var(--navy)">Consumo do Orçamento</span>'
+        +'<span style="font-size:12px;font-weight:700;color:var(--navy)">'+pU+'%</span>'
+      +'</div>'
+      +'<div style="height:10px;background:var(--bg-subtle);border-radius:6px;overflow:hidden;position:relative">'
+        +'<div style="height:100%;width:'+pU+'%;border-radius:6px;background:linear-gradient(90deg,var(--green),var(--navy-light));transition:width 1.2s ease"></div>'
+      +'</div>'
+      +'<div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--text-secondary)">'
+        +'<span>'+fK(totRea)+' utilizado</span>'
+        +'<span>'+fK(sal)+' disponível</span>'
+      +'</div>'
+    +'</div>';
   // Distribution by category
   var cats={};rows.forEach(function(r){if(!cats[r.cat])cats[r.cat]={orc:0,rea:0};cats[r.cat].orc+=r.orc;cats[r.cat].rea+=r.rea});
   var catH='<div class="budget-bars">';Object.keys(cats).forEach(function(c){var o=cats[c].orc,re=cats[c].rea,pc=o>0?Math.round(re/o*100):0;catH+='<div class="budget-item"><label><span>'+c+'</span><strong>'+fK(re)+' / '+fK(o)+'</strong></label><div class="budget-track"><div class="budget-fill '+(pc>85?'warn':'ok')+'" style="width:'+pc+'%"></div></div></div>'});catH+='</div>';
